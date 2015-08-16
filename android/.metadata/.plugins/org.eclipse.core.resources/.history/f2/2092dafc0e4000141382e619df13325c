@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Threet</string>
+    <string name="play_again_text">Play Again?</string>
+    <string name="occupied_error_message">Sorry, it\'s already occupied. Please select another one.</string>
+    <string name="congratulation_format_text">Congratulation! %s is the winner!</string>
+    <string name="draw_info_text">Draw!</string>
+    <string name="robot_turn_error_message">It\'s the robot\'s turn!</string>
+    <string name="one_player_text">1 Player</string>
+    <string name="two_players_text">2 Players</string>
+    <string name="p2_text">P2</string>
+    <string name="p2_text">P1</string>
+</resources>

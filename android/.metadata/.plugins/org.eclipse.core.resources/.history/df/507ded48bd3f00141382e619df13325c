@@ -1,0 +1,91 @@
+package com.threet.game.view;
+
+import java.util.List;
+
+import com.threet.game.App;
+import com.threet.game.R;
+import com.threet.game.model.Quiz;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+/**
+ * The SolutionAdapter handles the list of solutions.
+ * @author tchin
+ *
+ */
+public class SolutionAdapter extends ArrayAdapter<Quiz> {
+	
+	// The words
+    private List<Quiz> quizList;
+    
+    // Constructor
+    public SolutionAdapter(Context context, List<Quiz> items) {
+        super(context, R.layout.answer_item, items);
+        quizList = items; 
+    }
+    
+	@Override // ArrayAdapter
+	public View getView(int position, View convertView, ViewGroup parent) {
+		View v = convertView;
+
+		if (v == null) {
+			v  = LayoutInflater.from(parent.getContext()).inflate(R.layout.answer_item, parent, false);
+		}
+		
+		Quiz quiz = quizList.get(position);
+		formQuizOnView(position, v, quiz);
+		
+		return v;
+	}
+	
+	// Private Methods
+	/**
+	 * Display the quiz given.
+	 * @param Given word
+	 */
+	private void formQuizOnView(int position, View v, Quiz quiz) {
+		// UI's
+		ImageView symbol = (ImageView) v.findViewById(R.id.answer_symbol);
+		TextView noTextView = (TextView) v.findViewById(R.id.no_answer);
+		TextView answerTextView = (TextView) v.findViewById(R.id.answer_text);
+		TextView solutionTextView = (TextView) v.findViewById(R.id.solution);
+
+		// No
+		Context context = App.getContext();
+		noTextView.setText(String.format(context.getString(R.string.number_answer_format), position + 1));
+		
+		// Answer
+		String ans = quiz.getAnswer();
+		answerTextView.setText(ans != null && ans.length() > 0 ? ans : context.getString(R.string.not_available_text));
+		
+		// Symbol
+		if (quiz.check()) {
+			answerTextView.setTextColor(context.getResources().getColor(R.color.green));
+			symbol.setImageResource(R.drawable.correct);	
+			solutionTextView.setVisibility(View.GONE);
+		} else {
+			answerTextView.setTextColor(context.getResources().getColor(R.color.red));
+			symbol.setImageResource(R.drawable.wrong);
+			
+			// Solution
+			solutionTextView.setText(String.format("%s - %s", quiz.getSolution(), quiz.getMeaning()));
+			solutionTextView.setVisibility(View.VISIBLE);
+		}
+		
+		
+		// Set the background of the list item
+		if (position == 0) {
+			v.setBackgroundResource(R.drawable.top_black_bg);
+		} else if (position == quizList.size() - 1) {
+			v.setBackgroundResource(R.drawable.bottom_black_bg);
+		} else {
+			v.setBackgroundResource(R.drawable.middle_black_bg);
+		}
+	}
+}

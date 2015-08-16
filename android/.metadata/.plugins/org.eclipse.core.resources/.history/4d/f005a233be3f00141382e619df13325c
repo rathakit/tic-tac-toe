@@ -1,0 +1,85 @@
+package com.threet.game.module;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import com.threet.game.App;
+
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.net.Uri;
+
+/**
+ * The VoicePlayer class is a singleton.
+ * @author tchin
+ *
+ */
+public class VoicePlayer {
+	
+	private static VoicePlayer self;
+    private MediaPlayer player = null;
+    private List<VoicePlayerListener> listeners;
+    
+    // Constructor
+    private VoicePlayer() {
+    	listeners = new ArrayList<VoicePlayerListener>();
+    }
+    
+    // Static Method
+    public static VoicePlayer getInstance() {
+    	if (self == null) {
+    		self = new VoicePlayer();
+    	}
+    	return self;
+    }
+    
+    // Public Methods
+    public void addListener(VoicePlayerListener listener) {
+    	listeners.add(listener);
+    }
+    
+    public boolean isPlaying() {
+    	return player != null && player.isPlaying();
+    }
+    
+    public void stop() {
+    	if (player != null) {
+	    	player.release();
+	        player = null;
+    	}
+    }
+    
+    public void play(String fileName) {
+		Context context = App.getContext();
+		
+    	// Stop the previous first.
+		stop();
+    	
+    	// Start playing
+    	player = MediaPlayer.create(context, Uri.fromFile(new File(fileName)));
+		player.start();
+		
+		// Play word as long as its length
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+			
+			@Override
+			public void run() {
+				notifySuccess();
+			}
+		}, player.getDuration());
+    }
+    
+    // Private Methods
+    private void notifySuccess() {
+    	Iterator<VoicePlayerListener> itr = listeners.iterator();
+    	while (itr.hasNext()) {
+    		VoicePlayerListener observer = itr.next();
+    		observer.onVoicePlayFinished();
+    	}
+    }
+}

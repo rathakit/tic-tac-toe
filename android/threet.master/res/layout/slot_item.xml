@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+   	<TextView android:id="@+id/slot_title" 
+   	    android:layout_width="80dp"
+    	android:layout_height="80dp"
+    	android:textSize="20sp"
+    	android:padding="10dp"
+    	android:gravity="center"
+    	android:background="@color/white"
+    	android:textColor="@color/black"
+    	android:text="@string/p1_text"/>
+</RelativeLayout>

@@ -1,0 +1,8 @@
+package com.threet.game.module;
+
+public abstract class Player {
+	
+	public void take() {
+		
+	}
+}

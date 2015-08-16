@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Threet</string>
+	<string name="play_again_text">เริ่มเกมส์ใหม่?</string>
+	<string name="occupied_error_message">ขออภัยค่ะ ช่องนี้ถูกเลือกแล้วกรุณาเลือกช่องอื่นค่ะ</string>
+	<string name="congratulation_format_text">ยินดีด้วย! %s คือผู้ชนะ!</string>
+	<string name="draw_info_text">เสมอกัน!</string>
+    <string name="robot_turn_error_message">ตาหุ่นยนต์เดิน!</string>
+    <string name="one_player_text">ผู้เล่น 1 คน</string>
+    <string name="two_players_text">ผู้เล่น 2 คน</string>
+    <string name="p2_text">P2</string>
+    <string name="p1_text">P1</string>
+    <string name="robot_text">BOT</string>
+</resources>

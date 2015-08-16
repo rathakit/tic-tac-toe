@@ -1,0 +1,24 @@
+package com.threet.game.module;
+
+import com.threet.game.model.SlotOwner;
+
+public abstract class Player {
+	
+	private Board board;
+	private SlotOwner player;
+	
+	public Player(SlotOwner player, Board board) {
+		this.setBoard(board);
+		this.setPlayer(player);
+	}
+	
+	public abstract Status take(int row, int column);
+
+	protected SlotOwner getPlayer() {
+		return player;
+	}
+
+	protected Board getBoard() {
+		return board;
+	}
+}

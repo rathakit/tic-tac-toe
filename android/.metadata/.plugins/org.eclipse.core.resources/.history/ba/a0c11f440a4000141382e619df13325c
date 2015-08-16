@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/bg2"
+    android:orientation="vertical" >
+    
+    <!-- Buttons -->
+    <Button android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_margin="10dp"
+	    android:padding="10dp"
+	    android:textSize="18sp"
+	    android:textStyle="bold"
+	    android:onClick="selectOnePlayer"
+	    android:text="@string/one_player_text"
+	    android:background="@drawable/white_button_selection"/>
+    
+	<Button android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@id/gridview"
+	    android:layout_margin="10dp"
+	    android:padding="10dp"
+	    android:textSize="18sp"
+	    android:textStyle="bold"
+	    android:onClick="selectTwoPlayer"
+	    android:text="@string/two_players_text"
+	    android:background="@drawable/white_button_selection"/>
+</LinearLayout>

@@ -1,0 +1,11 @@
+package com.threet.game.model;
+
+/**
+ * The QuizType enum is representative for the type of quiz.
+ * @author tchin
+ *
+ */
+public enum QuizType {
+	Listening,
+	Matching
+}

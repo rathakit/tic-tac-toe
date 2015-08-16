@@ -1,0 +1,13 @@
+package com.threet.game.module;
+
+/**
+ * The Status enum identify the result.
+ * @author apple
+ *
+ */
+public enum Status {
+
+	OCCUPIED,
+	CATCH,
+	WIN
+}

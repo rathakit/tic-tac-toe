@@ -1,0 +1,56 @@
+package com.threet.game.module;
+
+import java.io.IOException;
+
+import android.media.MediaRecorder;
+
+/**
+ * The VoiceRecorder class is a singleton.
+ * @author apple
+ *
+ */
+public class VoiceRecorder {
+	
+	private static VoiceRecorder self;
+    private MediaRecorder recorder = null;
+    
+    // Constructor
+    private VoiceRecorder() {
+    }
+    
+    // Static Method
+    public static VoiceRecorder getInstance() {
+    	if (self == null) {
+    		self = new VoiceRecorder();
+    	}
+    	return self;
+    }
+    
+    // Public Methods
+    public void startRecording(String fileName) {
+    	// Stop first.
+    	stopRecording();
+    	
+    	// Start doing jobs.
+		recorder = new MediaRecorder();
+		recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        recorder.setOutputFile(fileName);
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+
+        try {
+        	recorder.prepare();
+        } catch (IOException e) {
+        }
+
+        recorder.start();
+    }
+
+    public void stopRecording() {
+    	if (recorder != null) {
+	    	recorder.stop();
+	    	recorder.release();
+	    	recorder = null;
+    	}
+    }
+}

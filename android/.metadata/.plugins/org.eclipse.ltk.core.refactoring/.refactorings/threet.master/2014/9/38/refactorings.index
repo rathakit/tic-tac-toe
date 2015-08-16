@@ -1,0 +1,49 @@
+1411104152481	Rename package 'com.mobile.now'
+1411104241799	Delete elements
+1411104293291	Delete elements
+1411104327888	Delete elements
+1411104389163	Delete elements
+1411104417825	Delete elements
+1411104434110	Delete elements
+1411104547623	Rename type 'MeaningType'
+1411104687061	Delete elements
+1411106676459	Rename type 'Player'
+1411110071607	Encapsulate field 'player'
+1411110103047	Encapsulate field 'board'
+1411110546516	Rename type 'LoginActivity'
+1411110574172	Rename resource 'login.xml'
+1411111558683	Copy compilation unit
+1411111677097	Copy file
+1411113363079	Delete elements
+1411113373246	Delete element
+1411117587699	Rename resource 'black_button_selection.xml'
+1411117731753	Encapsulate field 'name'
+1411126088294	Encapsulate field 'row'
+1411126092542	Encapsulate field 'column'
+1411126097736	Encapsulate field 'win'
+1411126102295	Encapsulate field 'owner'
+1411131848154	Rename enum constant 'B'
+1411131860753	Rename enum constant 'A'
+1411132018033	Rename enum constant 'PLAYER'
+1411132123369	Rename field 'isPlayerB'
+1411132142335	Rename field 'firstGamer'
+1411132571617	Rename field 'magicSlots'
+1411134443366	Rename method 'getBoard'
+1411134455287	Rename field 'board'
+1411137184850	Copy compilation unit
+1411137245588	Copy file
+1411137885704	Rename field 'isRobotTurn'
+1411139053337	Delete elements
+1411139081706	Rename resource 'bg3.png'
+1411139188694	Delete elements
+1411139202678	Delete elements
+1411139215880	Delete elements
+1411139223602	Copy file
+1411139584879	Rename enum constant 'GAMER'
+1411140512913	Rename type 'SlotOwner'
+1411141030107	Delete element
+1411141053056	Move compilation units
+1411141058013	Delete element
+1411141473103	Copy files
+1411144180259	Delete element
+1411144183364	Delete element

@@ -1,0 +1,154 @@
+package com.threet.game.model;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+/**
+ * The Examiner is the class that generates quiz in each type.
+ * @author tchin
+ *
+ */
+public class Examiner {
+
+	// TODO Public Methods
+	/**
+	 * Generate the quiz by randomization
+	 * @param words
+	 * @param type
+	 * @param numberOfQuestions
+	 * @return the group of quiz
+	 */
+	public List<Quiz> createQuiz(List<Word> words, QuizType type, int numberOfQuestions) {
+		List<Quiz> quiz = new ArrayList<Quiz>();
+		if (numberOfQuestions > 0) {
+			
+			// The group of random words
+			List<Word> randoms = null;
+			
+			if (type == QuizType.Listening) {
+				// Filter the word.
+				List<Word> filter = filterListenningQuiz(words.iterator());
+				
+				// Random the word.
+				randoms = random(filter, numberOfQuestions);
+				
+				// Generate the quiz by request.
+				quiz.addAll(generateListenningQuiz(randoms.iterator()));
+			} else if (type == QuizType.Matching) {
+				// Filter the word.
+				List<Word> filter = filterMatchingQuiz(words.iterator());
+				
+				// Random the word.
+				randoms = random(filter, numberOfQuestions);
+				
+				// Generate the quiz by request.
+				quiz.addAll(generateMatchingQuiz(randoms.iterator()));
+			}
+		}
+		
+		// 3). Return the quiz.
+		return quiz;
+	}
+	
+	/**
+	 * Check the listening quiz can be creatable.
+	 * @param words
+	 * @return the result
+	 */
+	public boolean isListenQuizCreatable(Iterator<Word> words) {
+		return filterListenningQuiz(words).size() > 0;
+	}
+
+	// TODO Private Methods
+	/**
+	 * Filter only the word that includes its voice.
+	 * @param words
+	 * @return the group of words
+	 */
+	private List<Word> filterListenningQuiz(Iterator<Word> words) {
+		List<Word> filter = new ArrayList<Word>();
+		while (words.hasNext()) {
+			Word w = words.next();
+			if (w.hasRecordFile()) {
+				filter.add(w);
+			}
+		}
+		return filter;
+	}
+	
+	/**
+	 * Filter only the word that includes its meanings.
+	 * @param words
+	 * @return the group of words
+	 */
+	private List<Word> filterMatchingQuiz(Iterator<Word> words) {
+		List<Word> filter = new ArrayList<Word>();
+		while (words.hasNext()) {
+			Word w = words.next();
+			if (w.hasMeaning()) {
+				filter.add(w);
+			}
+		}
+		return filter;
+	}
+	
+	/**
+	 * Generate the listening quiz
+	 * @param words
+	 * @return the group of listening quiz
+	 */
+	private List<Quiz> generateListenningQuiz(Iterator<Word> words) {
+		List<Quiz> quiz = new ArrayList<Quiz>();
+		while (words.hasNext()) {
+			Word w = words.next();
+			quiz.add(new ListeningQuiz(w));
+		}
+		return quiz;
+	}
+	
+	/**
+	 * Generate the matching quiz
+	 * @param words
+	 * @return the group of matching quiz
+	 */
+	private List<Quiz> generateMatchingQuiz(Iterator<Word> words) {
+		List<Quiz> quiz = new ArrayList<Quiz>();
+		while (words.hasNext()) {
+			Word w = words.next();
+			quiz.add(new MatchingQuiz(w));
+		}
+		return quiz;
+	}
+	
+	/**
+	 * Roll over the words sent
+	 * @param words
+	 * @param numberOfQuestions
+	 * @return the random words
+	 */
+	private List<Word> random(List<Word> words, int numberOfQuestions) {
+		List<Word> random = new ArrayList<Word>();
+		int wordSize = words.size();
+		int numberOfQuiz = wordSize < numberOfQuestions ? wordSize : numberOfQuestions;
+		Set<Integer> locations = new LinkedHashSet<Integer>();
+		Random r = new Random();
+		
+		// Start random the locations.
+		while (locations.size() < numberOfQuiz) {
+			locations.add(r.nextInt(wordSize));
+		}
+		
+		// Get words from the random locations.
+		Iterator<Integer> it = locations.iterator();
+		while (it.hasNext()) {
+			Word w = words.get(it.next());
+			random.add(w);
+		}
+		
+		return random;
+	}
+}

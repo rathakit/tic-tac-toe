@@ -1,0 +1,63 @@
+package com.threet.game.model;
+
+import java.util.List;
+import java.util.Random;
+
+/**
+ * The MatchingQuiz
+ * @author tchin
+ *
+ */
+public class MatchingQuiz extends Quiz {
+	
+	// The random meaning
+	private String randomMeaning;
+
+	// Overload Constructor
+	public MatchingQuiz(Word word) {
+		super(word);
+	}
+
+	/**
+	 * Get the question.
+	 * @
+	 */
+	@Override
+	public String getQuestion() {
+		Word w = getWord();
+		Random r = new Random();
+		List<Meaning> m = w.getMeanings();
+		Meaning meaning = m.get(r.nextInt(m.size()));
+		randomMeaning = String.format("(%s) %s", meaning.getMeaningTypeInString(), meaning.getMeaning());
+		return randomMeaning;
+	}
+	
+	/**
+	 * Get the solution.
+	 * @return the solution
+	 */
+	@Override
+	public String getSolution() {
+		Word w = getWord();
+		return w.getWord();
+	}
+	
+	/**
+	 * Get the meaning.
+	 */
+	@Override
+	public String getMeaning() {
+		return randomMeaning;
+	}
+	
+	/**
+	 * Check the answer.
+	 * @return the answer status
+	 */
+	@Override
+	public boolean check() {
+		Word w = getWord();
+		String answer = getAnswer();
+		return w.getWord().equals(answer);
+	}
+}

@@ -1,0 +1,84 @@
+package com.threet.game.view;
+
+import com.threet.game.R;
+import com.threet.game.model.SlotOwner;
+import com.threet.game.module.Board;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+
+/**
+ * The GridAdapter class
+ * @author tchin
+ *
+ */
+public class GridAdapter extends BaseAdapter {
+	
+	// The list of items
+    private int[][] items;
+    
+    // TODO Constructor
+    public GridAdapter(int[][] items) {
+        this.items = items;
+    }
+    
+    @Override // TODO ArrayAdapter
+	public View getView(int position, View convertView, ViewGroup parent) {
+		View v = convertView;
+
+		if (v == null) {
+			v  = LayoutInflater.from(parent.getContext()).inflate(R.layout.slot_item, parent, false);
+		}
+		
+		Log.d("Threet", "items" + items);
+		Log.d("Threet", "len: " + items.length);
+		
+		int numberOfColumns = (items[0].length - 1);
+		int row = position / numberOfColumns;
+		int column = position % numberOfColumns;
+		
+		ImageView image = (ImageView) v.findViewById(R.id.player_image);
+		SlotOwner owner = Board.convert(items[row][column]);
+		if (owner == SlotOwner.A) {
+			image.setImageResource(R.drawable.checked);
+		} else if (owner == SlotOwner.B) {
+			image.setImageResource(R.drawable.check);
+		} else {
+			image.setImageDrawable(null);
+		}
+		
+		return v;
+	}
+
+	@Override
+	public int getCount() {
+		int count = 0;
+		for (int i = 0; i < getRowCount(); i++) {
+			count += getColumnCount(i);
+		}
+		return count;
+	}
+
+	@Override
+	public Object getItem(int position) {
+		return null;
+	}
+
+	@Override
+	public long getItemId(int position) {
+		return 0;
+	}
+	
+	// TODO Private Methods
+	private int getRowCount() {
+        return items.length;
+    }
+
+	private int getColumnCount(int row) {
+        return items[row].length;
+    }
+}

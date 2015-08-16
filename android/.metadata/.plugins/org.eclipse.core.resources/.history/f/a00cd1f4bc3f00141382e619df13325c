@@ -1,0 +1,357 @@
+package com.mobile.now.view;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import com.parse.ParseUser;
+import com.threet.game.App;
+import com.threet.game.R;
+import com.threet.game.model.User;
+import com.threet.game.module.WordComposer;
+import com.threet.game.module.WordComposerListener;
+import com.threet.game.util.Util;
+
+import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+/**
+ * The TitleView class is the view of title.
+ * @author tchin
+ *
+ */
+public class TitleView extends LinearLayout implements View.OnClickListener, AnimationListener, TextWatcher, WordComposerListener {
+	
+	// The search text
+	private EditText searchEditText;
+	
+	// The cancel button
+	private TextView cancelText;
+	
+	// The number of items
+	private TextView countItemText;
+	
+	// The app name
+	private ImageView appNameImage;
+	
+	// The search view
+	private LinearLayout searchView;
+	
+	// The quiz button
+	private LinearLayout quizButtonLayout;
+	
+	// The sort button
+	private LinearLayout sortButtonLayout;
+	
+	// The search button
+	private LinearLayout searchButtonLayout;
+	
+	// The search image
+	private LinearLayout searchImageLayout;
+	
+	// The settings button
+	private LinearLayout settingsButtonLayout;
+	
+	// The slide left animation
+	private Animation slideLeftAnimated;
+
+	// The slide right animation
+	private Animation slideRightAnimated;
+	
+	// The sort image
+	private ImageView sortImage;
+	
+	// The observers
+	private List<TitleViewListener> observers;
+	
+	// The composer
+	private WordComposer composer;
+	
+	// The flag indicates ascending enabled
+	private boolean ascending;
+	
+	// Constructors
+	public TitleView(Context context) {
+        super(context);
+    }
+
+    public TitleView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+    
+    @Override // TODO View.OnClickListener
+    protected void onFinishInflate() {
+    	super.onFinishInflate();
+    	
+    	// UIs
+    	searchView = (LinearLayout) findViewById(R.id.search_view);
+    	searchImageLayout = (LinearLayout) findViewById(R.id.search_ic);
+    	searchButtonLayout = (LinearLayout) findViewById(R.id.search_button);
+    	searchButtonLayout.setOnClickListener(this);
+    	settingsButtonLayout = (LinearLayout) findViewById(R.id.settings);
+    	settingsButtonLayout.setOnClickListener(this);
+    	quizButtonLayout = (LinearLayout) findViewById(R.id.quiz_button);
+    	quizButtonLayout.setOnClickListener(this);
+    	sortButtonLayout = (LinearLayout) findViewById(R.id.sort_button);
+    	sortButtonLayout.setOnClickListener(this);
+    	searchEditText = (EditText) findViewById(R.id.search_text);
+    	searchEditText.addTextChangedListener(this);
+    	cancelText = (TextView) findViewById(R.id.cancel);
+    	cancelText.setOnClickListener(this);
+    	appNameImage = (ImageView) findViewById(R.id.app_name);
+    	countItemText = (TextView) findViewById(R.id.count_item);
+    	sortImage = (ImageView) findViewById(R.id.sort_image);
+    	slideRightAnimated = AnimationUtils.loadAnimation(getContext(), R.anim.title_slide_right);
+    	slideRightAnimated.setAnimationListener(this);
+    	slideLeftAnimated = AnimationUtils.loadAnimation(getContext(), R.anim.title_slide_left);
+    	slideLeftAnimated.setAnimationListener(this);
+    	User user = (User) ParseUser.getCurrentUser();
+    	ascending = user.isAscendingSort();
+    	sortImage.setImageResource(ascending ? R.drawable.selected_sorting : R.drawable.sorting);
+    	
+    	// Objects
+    	observers = new ArrayList<TitleViewListener>();
+		composer = WordComposer.getInstance();
+		composer.addObserver(this);
+    }
+
+	@Override // TODO View.OnClickListener
+	public void onClick(View v) {
+		// Search button clicked
+		if (v == searchButtonLayout) {
+			onSearch();
+		} else if (v == cancelText) {
+			onCancel();
+		} else if (v == settingsButtonLayout) {
+			notifyOnSettings();
+		} else if (v == quizButtonLayout) {
+			notifyOnQuiz();
+		} else if (v == sortButtonLayout) {
+			notifyOnSort();
+		}
+	}
+	
+	@Override // TODO TextWatcher
+	public void afterTextChanged(Editable s) {
+	}
+
+	@Override
+	public void beforeTextChanged(CharSequence s, int start, int count,
+			int after) {
+	}
+
+	@Override
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		notifyOnSearching(searchEditText.getText().toString());
+		
+		// Update the number of words found.
+		updateWordCount();
+	}
+	
+	@Override // AnimationListener
+	public void onAnimationEnd(Animation animation) {
+		if (animation == slideRightAnimated) {
+			searchButtonLayout.setVisibility(View.VISIBLE);
+			settingsButtonLayout.setVisibility(View.VISIBLE);
+			appNameImage.setVisibility(View.VISIBLE);
+			sortButtonLayout.setVisibility(View.VISIBLE);
+			searchEditText.setVisibility(View.GONE);
+			searchImageLayout.setVisibility(View.GONE);
+			cancelText.setVisibility(View.GONE);
+			searchView.setVisibility(View.GONE);
+			updateQuizIcon();
+		}
+	}
+
+	@Override
+	public void onAnimationRepeat(Animation animation) {
+	}
+
+	@Override
+	public void onAnimationStart(Animation animation) {
+	}
+	
+//	@Override // TODO WordComposerListener
+//	public void onWordDownloadFinished(boolean localMode, Exception e) {
+//	}
+//
+//	@Override
+//	public void onWordSyncDone(Exception e) {
+//	}
+	
+	@Override
+	public void onWordSyncUpdate(boolean localMode, Exception e) {
+		updateWordCount();
+		updateQuizIcon();
+	}
+
+	@Override
+	public void onWordEraseDone(Exception e) {
+		updateWordCount();
+		updateQuizIcon();
+	}
+	
+	@Override
+	public void onWordWriteDone(Exception e) {
+		updateWordCount();
+		updateQuizIcon();
+	}
+	
+	// TODO Public Methods
+	/**
+	 * Register as one of the observers.
+	 * @param observer
+	 */
+	public void addObserver(TitleViewListener observer) {
+		observers.add(observer);
+	}
+	
+	/**
+	 * Cancel searching.
+	 */
+	public void cancelSearching() {
+		setBackgroundDrawable(null);
+		searchView.startAnimation(slideRightAnimated);
+		
+		// Close keyboard.
+		Util.closeKeyboard(searchEditText);
+	}
+	
+	/**
+	 * Update the quiz button.
+	 */
+	public void updateQuizIcon() {
+		quizButtonLayout.setVisibility(searchView.getVisibility() == View.GONE && composer.ready() && composer.hasMeaning() ? View.VISIBLE : View.GONE);
+	}
+	
+	/**
+	 * Update the number of words found.
+	 */
+	public void updateWordCount() {
+		Context context = App.getContext();
+		int count = composer.getFilterWordCount();
+		if (count == 0) countItemText.setVisibility(View.GONE);
+		else if (count == 1) {
+			countItemText.setVisibility(View.VISIBLE);
+			countItemText.setText(context.getString(R.string.singular_item_format_text));
+		} else {
+			countItemText.setVisibility(View.VISIBLE);
+			countItemText.setText(String.format(context.getString(R.string.plural_item_format_text), count));
+		}
+	}
+	
+    // TODO Private Methods
+	/**
+	 * Called when the search button clicked.
+	 */
+	private void onSearch() {
+		setBackgroundResource(R.drawable.middle_black_bg);
+		searchButtonLayout.setVisibility(View.GONE);
+		settingsButtonLayout.setVisibility(View.GONE);
+		quizButtonLayout.setVisibility(View.GONE);
+		appNameImage.setVisibility(View.GONE);
+		sortButtonLayout.setVisibility(View.GONE);
+		searchEditText.setVisibility(View.VISIBLE);
+		searchImageLayout.setVisibility(View.VISIBLE);
+		cancelText.setVisibility(View.VISIBLE);
+		searchView.setVisibility(View.VISIBLE);
+		searchEditText.requestFocus();
+		searchView.startAnimation(slideLeftAnimated);
+		
+		// Notify observers.
+		notifyOnSearch(searchEditText.getText().toString());
+		
+		// Update the number of words found.
+		updateWordCount();
+	}
+	
+	/**
+	 * Called when the cancel button clicked.
+	 */
+	private void onCancel() {
+		// Cancel searching.
+		cancelSearching();
+		
+		// Notify observers.
+		notifyOnSearchCancel();
+	}
+
+	/**
+	 * Notify observers when searching.
+	 * @param text
+	 */
+	private void notifyOnSearching(String text) {
+		Iterator<TitleViewListener> it = observers.iterator();
+		while (it.hasNext()) {
+			TitleViewListener listener = it.next();
+			listener.onSearching(text);
+		}
+	}
+	
+	/**
+	 * Notify observers when clicking the search button.
+	 */
+	private void notifyOnSearch(String text) {
+		Iterator<TitleViewListener> it = observers.iterator();
+		while (it.hasNext()) {
+			TitleViewListener listener = it.next();
+			listener.onSearchClicked(text);
+		}
+	}
+	
+	/**
+	 * Notify observers when clicking the cancel button.
+	 */
+	private void notifyOnSearchCancel() {
+		Iterator<TitleViewListener> it = observers.iterator();
+		while (it.hasNext()) {
+			TitleViewListener listener = it.next();
+			listener.onSearchCancel();
+		}
+	}
+	
+	/**
+	 * Notify observers when clicking the settings button.
+	 */
+	private void notifyOnSettings() {
+		Iterator<TitleViewListener> it = observers.iterator();
+		while (it.hasNext()) {
+			TitleViewListener listener = it.next();
+			listener.onSettingsClicked();
+		}
+	}
+	
+	/**
+	 * Notify observers when clicking the quiz button.
+	 */
+	private void notifyOnQuiz() {
+		Iterator<TitleViewListener> it = observers.iterator();
+		while (it.hasNext()) {
+			TitleViewListener listener = it.next();
+			listener.onQuizClicked();
+		}
+	}
+	
+	/**
+	 * Notify observers when clicking the sort button.
+	 */
+	private void notifyOnSort() {
+		ascending = !ascending;
+		sortImage.setImageResource(ascending ? R.drawable.selected_sorting : R.drawable.sorting);
+		Iterator<TitleViewListener> it = observers.iterator();
+		while (it.hasNext()) {
+			TitleViewListener listener = it.next();
+			listener.onSortClicked(ascending);
+		}
+	}
+}

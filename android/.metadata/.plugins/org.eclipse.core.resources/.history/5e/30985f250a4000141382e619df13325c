@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/bg2"
+    android:orientation="vertical" >
+    
+    <TextView android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:id="@+id/player_name"
+	    android:textColor="@color/white"
+	    android:text="Player A"
+	    android:textSize="20sp"
+	    android:textStyle="bold"
+	    android:layout_margin="10dp"/>
+    
+    <!-- Game Board -->
+    <GridView android:id="@+id/gridview"
+        android:layout_below="@id/player_name"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:columnWidth="90dp"
+	    android:numColumns="auto_fit"
+	    android:verticalSpacing="10dp"
+	    android:horizontalSpacing="10dp"
+	    android:stretchMode="columnWidth"
+	    android:gravity="center"/>
+    
+    <!-- Button -->
+    <Button android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@id/gridview"
+	    android:layout_margin="10dp"
+	    android:padding="10dp"
+	    android:textSize="18sp"
+	    android:textStyle="bold"
+	    android:onClick="onRetry"
+	    android:text="@string/play_again_text"
+	    android:background="@drawable/white_button_selection"/>
+</RelativeLayout>

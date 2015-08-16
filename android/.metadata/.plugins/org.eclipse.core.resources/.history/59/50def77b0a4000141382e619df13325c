@@ -1,0 +1,38 @@
+package com.threet.game.view;
+
+import com.threet.game.R;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Toast;
+
+/**
+ * The PlayerActivity is the player selection.
+ * @author tchin
+ *
+ */
+public class PlayerActivity extends BaseActivity {
+	
+	// TODO BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.player);
+	}
+	
+	// TODO Layout's Methods
+	public void selectOnePlayer(View v) {
+		
+	}
+	
+	public void selectTwoPlayers(View v) {
+		
+	}
+	
+	// TODO Protected Methods
+	protected void initActivity() {
+	}
+		
+}

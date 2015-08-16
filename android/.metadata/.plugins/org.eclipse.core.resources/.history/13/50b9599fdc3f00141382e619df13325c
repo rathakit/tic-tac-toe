@@ -1,0 +1,41 @@
+package com.threet.game.module;
+
+import com.threet.game.model.SlotOwner;
+
+public abstract class Player {
+	
+	private Board board;
+	private SlotOwner player;
+	private String name;
+	
+	/** TODO 
+	 * Overload Constructor (The default is not allowed here.)
+	 * @param player
+	 * @param board
+	 */
+	public Player(SlotOwner player, Board board, String name) {
+		this.board = board;
+		this.player = player;
+		this.name = name;
+	}
+
+	// TODO Protected Methods
+	protected SlotOwner getPlayer() {
+		return player;
+	}
+
+	protected Board getBoard() {
+		return board;
+	}
+	
+	// TODO Abstract Methods
+	public abstract Status take(int row, int column);
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+}

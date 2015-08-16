@@ -1,0 +1,8 @@
+package com.threet.game.module;
+
+public enum Status {
+
+	OCCUPIED,
+	CATCH
+	WIN
+}

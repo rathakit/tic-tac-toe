@@ -1,0 +1,7 @@
+package com.threet.game.util;
+
+public interface CustomDialogListener {
+
+	public void onYesButtonClicked(String dialogId);
+	public void onNoButtonClicked(String dialogId);
+}

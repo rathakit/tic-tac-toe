@@ -1,0 +1,60 @@
+package com.threet.game.model;
+
+import java.util.List;
+import java.util.Random;
+
+/**
+ * The ListenningQuiz
+ * @author tchin
+ *
+ */
+public class ListeningQuiz extends Quiz {
+	
+	// Overload Constructor
+	public ListeningQuiz(Word word) {
+		super(word);
+	}
+
+	/**
+	 * Get the question.
+	 * @
+	 */
+	@Override
+	public String getQuestion() {
+		Word w = getWord();
+		return w.getSoundPath();
+	}
+	
+	/**
+	 * Get the solution.
+	 * @return the solution
+	 */
+	@Override
+	public String getSolution() {
+		Word w = getWord();
+		return w.getWord();
+	}
+	
+	/**
+	 * Get the meaning.
+	 */
+	@Override
+	public String getMeaning() {
+		Word w = getWord();
+		Random r = new Random();
+		List<Meaning> m = w.getMeanings();
+		Meaning meaning = m.get(r.nextInt(m.size()));
+		return String.format("(%s) %s", meaning.getMeaningTypeInString(), meaning.getMeaning());
+	}
+	
+	/**
+	 * Check the answer.
+	 * @return the answer status
+	 */
+	@Override
+	public boolean check() {
+		Word w = getWord();
+		String answer = getAnswer();
+		return w.getWord().equals(answer);
+	}
+}

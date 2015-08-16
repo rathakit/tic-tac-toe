@@ -1,0 +1,74 @@
+package com.threet.game.model;
+
+/**
+ * The abstract class Quiz provides the mandatory interfaces.
+ * @author tchin
+ *
+ */
+public abstract class Quiz {
+	
+	// The word
+	private Word word;
+	
+	// The answer
+	private String answer;
+
+	/**
+	 * Overload construct with parameter 'Word' type.
+	 * @param word
+	 */
+	public Quiz(Word word) {
+		this.word = word;
+	}
+	
+	// TODO Abstract Methods
+	/**
+	 * Generate the question.
+	 * @return the question
+	 */
+	public abstract String getQuestion();
+	
+	/**
+	 * Get the solution.
+	 * @return the solution
+	 */
+	public abstract String getSolution();
+	
+	/**
+	 * Get the meaning.
+	 * @return the meaning
+	 */
+	public abstract String getMeaning();
+	
+	/**
+	 * Check the answer.
+	 * @return the answer status
+	 */
+	public abstract boolean check();
+	
+	// TODO Public Methods
+	/**
+	 * Set the answer.
+	 * @param answer
+	 */
+	public void setAnswer(String answer) {
+		this.answer = answer.trim().toLowerCase();
+	}
+	
+	/**
+	 * Get the answer
+	 * @return the answer
+	 */
+	public String getAnswer() {
+		return answer;
+	}
+	
+	// TODO Protected Methods
+	/**
+	 * Get the word of question.
+	 * @return the word
+	 */
+	protected Word getWord() {
+		return word;
+	}
+}

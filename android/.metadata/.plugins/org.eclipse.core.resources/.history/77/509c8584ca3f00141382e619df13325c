@@ -1,0 +1,14 @@
+package com.threet.game.module;
+
+public abstract class Player {
+	
+	protected Board board;
+	
+	public Player(Board board) {
+		this.board = board;
+	}
+	
+	public void take() {
+		
+	}
+}

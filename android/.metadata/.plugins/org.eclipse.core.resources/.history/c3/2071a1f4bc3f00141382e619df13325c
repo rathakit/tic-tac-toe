@@ -1,0 +1,269 @@
+package com.mobile.now.view;
+
+import java.util.List;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.mobile.now.model.Examiner;
+import com.mobile.now.model.ListeningQuiz;
+import com.mobile.now.model.MatchingQuiz;
+import com.mobile.now.model.Quiz;
+import com.mobile.now.model.QuizType;
+import com.mobile.now.model.Word;
+import com.mobile.now.module.VoicePlayer;
+import com.mobile.now.module.WordComposer;
+import com.mobile.now.util.CustomDialog;
+import com.mobile.now.util.CustomDialogListener;
+import com.mobile.now.util.Util;
+import com.mobile.now.R;
+
+/**
+ * The QuizActivity is the quiz view.
+ * @author tchin
+ *
+ */
+public class QuizActivity extends BaseActivity implements CustomDialogListener {
+	
+	// The type layout
+	private LinearLayout quizTypeLayout;
+
+	// The quiz layout
+	private LinearLayout quizLayout;
+
+	// The image question
+	private LinearLayout imageQuestionLayout;
+	
+	// The listening quiz
+	private LinearLayout listeningQuizLayout;
+	
+	// The current question
+	private TextView currentQuestionText;
+	
+	// The question
+	private TextView questionText;
+	
+	// The answer
+	private EditText answerText;
+	
+	// The solution
+	private ListView solutionList;
+	
+	// The next image
+	private ImageView nextImage;
+	
+	// The word composer
+	private WordComposer composer;
+	
+	// The voice player
+	private VoicePlayer player;
+	
+	// The examiner
+	private Examiner examiner;
+	
+	// The random quiz
+	private List<Quiz> randomQuiz;
+	
+	// The solution
+	private SolutionAdapter adapter;
+	
+	// The current question
+	private int currentQuestion;
+	
+	// The total question
+	private int totalQuestion;
+
+	// BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.quiz);
+	}
+	
+	// TODO Layout's Methods
+	/**
+	 * The onBackClicked will be invoked when clicking on the back button.
+	 * @param v
+	 */
+	public void onBackClicked(View v) {
+		Util.closeKeyboard(answerText);
+		finish();
+	}
+	
+	/**
+	 * The onMatchingQuiz will be invoked when clicking on the matching game button.
+	 * @param v
+	 */
+	public void onMatchingQuiz(View v) {
+		intialQuiz(QuizType.Matching);
+	}
+	
+	/**
+	 * The onListeningQuiz will be invoked when clicking on the listening game button.
+	 * @param v
+	 */
+	public void onListeningQuiz(View v) {
+		intialQuiz(QuizType.Listening);
+	}
+	
+	/**
+	 * The onPrevious will be invoked when clicking on the previous button.
+	 * @param v
+	 */
+	public void onPrevious(View v) {
+		if (currentQuestion - 1 >= 0) {
+			// Set the answer.
+			Quiz q = randomQuiz.get(currentQuestion);
+			String answer = answerText.getText().toString().trim();
+			q.setAnswer(answer);
+			
+			// Move to next question.
+			currentQuestion--;
+			q = randomQuiz.get(currentQuestion);
+			formQuestion(q);
+						
+			nextImage.setImageResource(R.drawable.next);
+		}
+	}
+	
+	/**
+	 * The onNext will be invoked when clicking on the next button.
+	 * @param v
+	 */
+	public void onNext(View v) {
+		// Set the answer.
+		Quiz q = randomQuiz.get(currentQuestion);
+		String answer = answerText.getText().toString().trim();
+		q.setAnswer(answer);
+		
+		// Submit the answers.
+		if (currentQuestion + 1 == totalQuestion) {
+			// Close keyboard, then show confirmation dialog.
+			Util.closeKeyboard(answerText);
+			CustomDialog.showDialog(this, this, null, getString(R.string.app_name), getString(R.string.submit_answer_question), true);
+		} else {
+			// Move to next question.
+			currentQuestion++;
+			q = randomQuiz.get(currentQuestion);
+			formQuestion(q);
+			
+			// Last Question, change image to finish line!
+			if (currentQuestion == totalQuestion - 1) {
+				nextImage.setImageResource(R.drawable.flag);
+			} else {
+				nextImage.setImageResource(R.drawable.next);
+			}	
+		}
+	}
+	
+	/**
+	 * The onListen will be invoked when clicking on the listen button.
+	 * @param v
+	 */
+	public void onListen(View v) {
+		Quiz q = randomQuiz.get(currentQuestion);
+		player.play(q.getQuestion());
+	}
+
+	@Override // TODO CustomDialogListener
+	public void onYesButtonClicked(String dialogId) {
+		submit();
+	}
+
+	@Override
+	public void onNoButtonClicked(String dialogId) {
+	}
+	
+	// TODO Protected Methods
+	protected void initActivity() {
+		// UI's
+		quizTypeLayout = (LinearLayout) findViewById(R.id.quiz_type_layout);
+		quizLayout = (LinearLayout) findViewById(R.id.quiz_layout);
+		imageQuestionLayout = (LinearLayout) findViewById(R.id.img_question);
+		imageQuestionLayout = (LinearLayout) findViewById(R.id.img_question);
+		listeningQuizLayout = (LinearLayout) findViewById(R.id.listen_quiz_view);
+		currentQuestionText = (TextView) findViewById(R.id.current_question);
+		questionText = (TextView) findViewById(R.id.text_question);
+		answerText = (EditText) findViewById(R.id.answer);
+		nextImage = (ImageView) findViewById(R.id.next_image);
+		solutionList = (ListView) findViewById(R.id.solution_list);
+		
+		// Others
+		composer = WordComposer.getInstance();
+		player = VoicePlayer.getInstance();
+		examiner = new Examiner();
+		List<Word> words = composer.getWords();
+		if (examiner.isListenQuizCreatable(words.iterator())) {
+			listeningQuizLayout.setVisibility(View.VISIBLE);
+		} else {
+			listeningQuizLayout.setVisibility(View.GONE);
+		}
+	}
+	
+	// TODO Private Methods
+	/**
+	 * Initial to the quiz.
+	 */
+	private void intialQuiz(QuizType type) {
+		// Handle view.
+		quizTypeLayout.setVisibility(View.GONE);
+		solutionList.setVisibility(View.GONE);
+		quizLayout.setVisibility(View.VISIBLE);
+		
+		// Get the quiz.
+		List<Word> words = composer.getFilterWord();
+		int numberOfQuestion = 10;
+		randomQuiz = examiner.createQuiz(words, type, numberOfQuestion);
+		currentQuestion = 0;
+		totalQuestion = randomQuiz.size();
+		formQuestion(randomQuiz.get(currentQuestion));
+		
+		// Set adapter for the list.
+		adapter = new SolutionAdapter(this, randomQuiz);
+		solutionList.setAdapter(adapter);
+		
+		// Open keyboard!
+		answerText.requestFocus();
+		Util.openKeyboard();
+	}
+	
+	/**
+	 * Display question
+	 * @param the quiz
+	 */
+	private void formQuestion(Quiz q) {
+		currentQuestionText.setText(String.format("%d / %d", currentQuestion + 1, totalQuestion));
+		if (q instanceof MatchingQuiz) {
+			imageQuestionLayout.setVisibility(View.GONE);
+			questionText.setVisibility(View.VISIBLE);
+			questionText.setText(q.getQuestion());
+		} else if (q instanceof ListeningQuiz) {
+			imageQuestionLayout.setVisibility(View.VISIBLE);
+			questionText.setVisibility(View.GONE);
+		}
+		
+		// Set the answer text box.
+		String ans = q.getAnswer();
+		if (ans != null && ans.length() > 0) {
+			answerText.setText(ans);	
+		} else {
+			answerText.setText("");
+		}
+	}
+	
+	/**
+	 * Submit the answer and see the solution.
+	 */
+	private void submit() {
+		// Handle the views.
+		quizTypeLayout.setVisibility(View.GONE);
+		quizLayout.setVisibility(View.GONE);
+		solutionList.setVisibility(View.VISIBLE);
+		
+		// Refresh the list.
+		adapter.notifyDataSetChanged();
+	}
+}

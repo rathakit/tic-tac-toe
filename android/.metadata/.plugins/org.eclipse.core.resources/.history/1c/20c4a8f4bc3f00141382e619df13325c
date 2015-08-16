@@ -1,0 +1,930 @@
+package com.mobile.now.module;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+import com.mobile.now.model.Meaning;
+import com.mobile.now.model.User;
+import com.mobile.now.model.Word;
+import com.mobile.now.util.Util;
+import com.parse.CountCallback;
+import com.parse.DeleteCallback;
+import com.parse.FindCallback;
+import com.parse.GetCallback;
+import com.parse.GetDataCallback;
+import com.parse.ParseException;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.SaveCallback;
+
+/**
+ * The WordComposer class is responsible for handling user's words.
+ * @author tchin
+ *
+ */
+public class WordComposer {
+	
+	public static final int LIMIT_ITEM_PER_PAGE = 10;
+	
+	// The instance
+	private static WordComposer self;
+	
+	// The words
+	private List<Word> words;
+	
+	// The filter words
+	private List<Word> filterWords;
+	
+	// The marked words
+	private List<Word> markedWords;
+	
+	// The observers
+	private List<WordComposerListener> observers;
+	
+	// The revised word
+	private Word revisedWord;
+	
+	// The current user
+	private User currentUser;
+	
+	// The number of meanings in every word
+	private int meaningCount;
+	
+	// The flag indicates the sync mode - Online or Offline
+	private boolean localMode;
+	
+	// The flag indicates the sync task begins
+	private boolean synchronousing;
+	
+	// TODO Constructor
+	private WordComposer() {
+		observers = new ArrayList<WordComposerListener>();
+		filterWords = new ArrayList<Word>();
+		markedWords = new ArrayList<Word>();
+		words = new ArrayList<Word>();
+	}
+	
+	// TODO  Static Method
+	public static WordComposer getInstance() {
+		if (self == null) {
+			self = new WordComposer();
+		}
+		return self;
+	}
+
+	// TODO  Public Methods
+	/**
+	 * Add the observer.
+	 * @param observer
+	 */
+	public void addObserver(WordComposerListener observer) {
+		observers.add(observer);
+	}
+	
+	/**
+	 * Reset to default.
+	 */
+	public void reset() {
+		self = new WordComposer();
+	}
+	
+	/**
+	 * Add/Edit a new word.
+	 */
+	public boolean writeWord(Word word, boolean revisedMode) {
+		boolean result = word != null && currentUser != null;
+		if (result) {
+			String w = word.getWord();
+			result = w != null && w.length() > 0;
+			if (result) {
+				// Voice?
+				if (word.hasRecordFile()) {
+					saveVoiceOnServer(word);
+				}
+				
+				// Internet?
+				if (Util.isNetworkConnected()) {
+					// Save on server!
+					word.saveInBackground(new WordSaveCallback(word));
+				} else {
+					// Mark as offline word.
+					word.markOffline();
+				}
+				// Save in local!
+				word.pinInBackground(null);
+				
+				if (!revisedMode) words.add(word);
+				
+				// Sort
+				sort(currentUser.isAscendingSort());
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Remove the checked words.
+	 * @throws ParseException 
+	 */
+	public void eraseMarkWords() {
+		// Mark them as removed.
+		Iterator<Word> it = markedWords.iterator();
+		List<ParseObject> tmp = new ArrayList<ParseObject>();
+		while (it.hasNext()) {
+			Word w = it.next();
+			w.removeAllMeanings();
+			
+			// Is this word offline added?
+			if (w.isOffline()) {
+				// Delete the word in locally.
+				w.unpinInBackground(null);
+				words.remove(w);
+				filterWords.remove(w);
+				currentUser.removeWord(w);
+			} else {
+				// Delete the word in remotely.
+				w.markRemoved();
+				w.pinInBackground(null);
+				tmp.add(w);
+			}
+		}
+		
+		// If Internet is available, send to server, otherwise callback immediately.
+		if (Util.isNetworkConnected()) 
+			ParseObject.deleteAllInBackground(tmp, new MarkedWordDeleteCallback(tmp));
+		else {
+			// Clear all marked.
+			markedWords.clear();
+			
+			// Callback
+			notifyWordErase(null);
+		}
+	}
+	
+	/**
+	 * Sync data between client and server.
+	 */
+	public void sync(boolean localMode, User user) {
+		if (localMode || Util.isNetworkConnected()) {
+			if (!synchronousing && user != null) {
+				synchronousing = true;
+				setCurrentUser(user);
+				setSyncMode(localMode);
+				
+				// 1). Remove offline.
+				if (handleWordOfflineRemoved()) {
+					return;
+				}
+				
+				// 2). Add offline.
+				if (handleWordOfflineAdded()) {
+					return;
+				}
+				
+				// 3). Start syncing.
+				doStartSyncing();
+			}
+		} else {
+			// No Internet connection
+			finishFetching(new IOException());
+		}
+	}
+	
+	/**
+	 * Get the sync status.
+	 * @return the status
+	 */
+	public boolean isSync() {
+		return synchronousing;
+	}
+	
+	/**
+	 * Check if there is any word selected.
+	 * @return The status
+	 */
+	public boolean hasMarkedWord() {
+		return markedWords.size() > 0;
+	}
+	
+	/**
+	 * Sort the words
+	 */
+	public void sort(boolean ascending) {
+		List<Word> list = getWords();
+		if (list != null)
+			if (ascending) Collections.sort(list); 
+			else {
+				// Random location in array.
+				int size = list.size();
+				Random r = new Random();
+				Set<Integer> box = new LinkedHashSet<Integer>();
+				while (box.size() < size) {
+					box.add(r.nextInt(size));
+				}
+				
+				// Add each item to new array.
+				List<Word> tmp = new ArrayList<Word>();
+				for (int location : box) {
+					tmp.add(list.get(location));
+				}
+				
+				// Clear old and add all new.
+				list.clear();
+				list.addAll(tmp);
+			}
+	}
+
+	/**
+	 * Set the revised word
+	 * @param revised
+	 */
+	public void setRevisedWord(Word revised) {
+		this.revisedWord = revised;
+	}
+	
+	/**
+	 * Get the revised word.
+	 * @return revised word
+	 */
+	public Word getRevisedWord() {
+		return revisedWord;
+	}
+	
+	/**
+	 * Get the number of marked words
+	 * @return the number of marked words
+	 */
+	public int getCountMarkedWord() {
+		return markedWords.size();
+	}
+	
+	/**
+	 * Get the number of words
+	 * @return the number of words
+	 */
+	public int getCountWord() {
+		List<Word> list = getWords();
+		return list != null ? list.size() : 0;
+	}
+	
+	/**
+	 * Get all words.
+	 * @return The words and null if not found
+	 */
+	public List<Word> getWords() {
+		return words;
+	}
+	
+	/**
+	 * Validate all data is ready to go.
+	 * @return the status
+	 */
+	public boolean ready() {
+		List<Word> words = getWords();
+		if (words == null) {
+			return false;
+		}
+		
+		boolean ready = true;
+		Iterator<Word> it = words.iterator();
+		while (it.hasNext()) {
+			Word w = it.next();
+			Iterator<Meaning> itm = w.getMeanings().iterator();
+			while (itm.hasNext()) {
+				Meaning m = itm.next();
+				ready = m.isDataAvailable();
+				if (ready == false) {
+					break;
+				}
+			}
+			
+			if (ready == false) {
+				break;
+			}
+		}
+		return ready;
+	}
+	
+	/**
+	 * Get the number of words that was filtered.
+	 * @return the number of words.
+	 */
+	public int getFilterWordCount() {
+		return filterWords != null ? filterWords.size() : 0;
+	}
+	
+	/**
+	 * Get the words that was filtered.
+	 * @return the group of filtered words
+	 */
+	public List<Word> getFilterWord() {
+		return filterWords;
+	}
+
+	/**
+	 * Filter words by keyword.
+	 * @param searchText
+	 * @return The filtered words
+	 */
+	public List<Word> getFilterWordArray(String searchText) {
+		// Clear all filtered words.
+		filterWords.clear();
+		
+		if (words.size() > 0) {
+			if (searchText == null || searchText.trim().length() == 0) {
+				// Add only available ones. (Not Removed)
+				Iterator<Word> it = words.iterator();
+				while (it.hasNext()) {
+					Word w = it.next();
+					if (!w.isRemoved()) {
+						filterWords.add(w);
+					}
+				}
+			} else {
+				// Find matching from the original array. (Not Removed)
+				Iterator<Word> it = words.iterator();
+				while (it.hasNext()) {
+					Word w = it.next();
+					if (w.matched(searchText) && !w.isRemoved()) {
+						filterWords.add(w);
+					}
+				}
+			}
+		}
+		
+		return filterWords;
+	}
+	
+	/**
+	 * Check any meaning found
+	 * @return The check status
+	 */
+	public boolean hasMeaning() {
+		List<Word> words = getWords();
+		if (words == null) {
+			return false;
+		}
+		
+		boolean found = false;
+		Iterator<Word> it = words.iterator();
+		while (it.hasNext()) {
+			Word w = it.next();
+			if (w.isRemoved()) continue;
+			found = w.getMeanings().size() > 0;
+			if (found) {
+				break;
+			}
+		}
+		
+		return found;
+	}
+	
+	/**
+	 * Check any words found
+	 * @return The check status
+	 */
+	public boolean hasWords() {
+		boolean found = false;
+		List<Word> list = getWords();
+		if (list != null) {
+			Iterator<Word> it = list.iterator();
+			while (it.hasNext()) {
+				Word w = it.next();
+				if (!w.isRemoved()){
+					found = true;
+					break;
+				}
+			}
+		}
+		return found;
+	}
+	
+	/**
+	 * Set the current user.
+	 * @param currentUser
+	 */
+	public void setCurrentUser(User currentUser) {
+		this.currentUser = currentUser;
+	}
+
+	/**
+	 * Mark the word.
+	 * @param word
+	 */
+	public void markWord(Word word) {
+		if (word.isChecked()) {
+			// Remove from the list.
+			int index = markedWords.indexOf(word);
+			if (index > -1) markedWords.remove(index);
+			word.setChecked(false);
+		} else {
+			// Add to the list.
+			markedWords.add(word);
+			word.setChecked(true);
+		}
+	}
+	
+	// TODO Private Methods
+	/**
+	 * Handle all offline words removed.
+	 * @return the process status (true - process, false - no)
+	 */
+	private boolean handleWordOfflineRemoved() {
+		boolean result = false;
+		List<ParseObject> removedList = new ArrayList<ParseObject>();
+		List<Word> list = getWords();
+		if (list != null) {
+			Iterator<Word> it = list.iterator();
+			while (it.hasNext()) {
+				Word w = it.next();
+				
+				// Filter only removed.
+				if (w.isRemoved()) {
+					w.removeAllMeanings();
+					removedList.add(w);
+				}
+			}
+			
+			result = removedList.size() > 0;
+			if (result) {
+				ParseObject.deleteAllInBackground(removedList, new OfflineWordDeleteCallback(removedList));
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Handle all offline words added.
+	 * @return the process status (true - process, false - no)
+	 */
+	private boolean handleWordOfflineAdded() {
+		boolean result = false;
+		List<ParseObject> addedList = new ArrayList<ParseObject>();
+		List<Word> list = getWords();
+		if (list != null) {
+			Iterator<Word> it = list.iterator();
+			while (it.hasNext()) {
+				Word w = it.next();
+				// Filter only offline.
+				if (w.isOffline()) {
+					w.removeOffline();
+					addedList.add(w);
+					
+					// Voice?
+					if (w.hasRecordFile()) {
+						saveVoiceOnServer(w);
+					}
+				}
+			}
+			
+			result = addedList.size() > 0;
+			if (result) {
+				// Send them to server.
+				ParseObject.saveAllInBackground(addedList, new OfflineWordSaveCallback(addedList));
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Fetch all meanings of word
+	 * @param meaning
+	 */
+	private void fetchAllMeanings(Meaning meaning) {
+		ParseQuery<Meaning> query = ParseQuery.getQuery(Meaning.class);
+		if (localMode) query.fromLocalDatastore();
+		query.getInBackground(meaning.getObjectId(), new MeaningGetCallback(meaning));
+	}
+	
+	/**
+	 * Count the total words and set into user object. 
+	 */
+	private void doStartSyncing() {
+		// Reset the previous sync.
+		currentUser.reset();
+		
+		// Count it!
+		ParseQuery<Word> query = ParseQuery.getQuery(Word.class);
+		query.whereEqualTo(Word.OWNER_ATTRIBUTE, currentUser);
+		if (localMode) query.fromLocalDatastore();
+		query.countInBackground(new WordCountCallback());
+	}
+	
+	/**
+	 * Fetch all words by mode.
+	 */
+	private void fetchAllWords() {
+		// Fetching!
+		ParseQuery<Word> query = ParseQuery.getQuery(Word.class);
+		query.whereEqualTo(Word.OWNER_ATTRIBUTE, currentUser);
+		if (localMode) query.fromLocalDatastore();
+		query.setLimit(LIMIT_ITEM_PER_PAGE);
+		query.setSkip(currentUser.countAvailableWords());
+		query.findInBackground(new WordFindCallback());
+	}
+	
+	/**
+	 * This method will be called after finish fetching and decide what to do next.
+	 * @param e
+	 */
+	private void finishFetching(Exception e) {
+		if (e == null) {
+			// Is there any more words?
+			if (currentUser.isWordReady()) {
+				synchronousing = false;
+				words.clear();
+				words.addAll(currentUser.getWords());
+				sort(currentUser.isAscendingSort());
+			} else { // more words to fetch.
+				if (words.size() == 0) {
+					words.addAll(currentUser.getWords());
+					sort(currentUser.isAscendingSort());
+				}
+				fetchAllWords();
+			}
+		} else {
+			synchronousing = false;
+		}
+		
+		// Callback to caller that finish fetching, please update view.
+		notifySync(e);
+	}
+	
+	/**
+	 * Set the sync mode.
+	 * @param localMode
+	 */
+	private void setSyncMode(boolean localMode) {
+		this.localMode = localMode;
+	}
+	
+	/**
+	 * Notify all observers that already write a word to the server.
+	 */
+	private void notifyWordWrite(Exception e) {
+		Iterator<WordComposerListener> it = observers.iterator();
+		while (it.hasNext()) {
+			WordComposerListener listener = it.next();
+			listener.onWordWriteDone(e);
+		}
+	}
+	
+	/**
+	 * Notify all observers that already  erase words from the server.
+	 */
+	private void notifyWordErase(Exception e) {
+		Iterator<WordComposerListener> it = observers.iterator();
+		while (it.hasNext()) {
+			WordComposerListener listener = it.next();
+			listener.onWordEraseDone(e);
+		}
+	}
+	
+	/**
+	 * Notify all observers the sync task result.
+	 */
+	private void notifySync(Exception e) {
+		Iterator<WordComposerListener> it = observers.iterator();
+		while (it.hasNext()) {
+			WordComposerListener listener = it.next();
+			listener.onWordSyncUpdate(localMode, e);
+		}
+	}
+	
+	/**
+	 * Send recorded voice to the server.
+	 * @param voicePath
+	 * @return The status
+	 */
+	private boolean saveVoiceOnServer(Word word) {
+		boolean result = true;
+		BufferedInputStream buf = null;
+		try {
+			String voicePath = word.getSoundPath();
+			if (voicePath != null && voicePath.length() > 0) {
+				File file = new File(voicePath);
+				buf = new BufferedInputStream(new FileInputStream(file));
+		        int size = (int) file.length();
+		        byte[] bytes = new byte[size];
+		        buf.read(bytes, 0, bytes.length);
+				ParseFile parseFile = new ParseFile(file.getName(), bytes);
+				parseFile.saveInBackground(new VoiceSaveCallback(word, parseFile));
+			}
+		} catch (Exception e) {
+			result = false;
+		} finally {
+			try {
+				if (buf != null) buf.close();
+			} catch (IOException e) {
+			}
+		}
+		return result;
+	}
+	
+	/** TODO 
+	 * The WordSaveCallback class is the inner class to handle saving.
+	 * @author tchin
+	 *
+	 */
+	private class WordSaveCallback extends SaveCallback {
+		
+		// Reference word
+		private Word refWord;
+		
+		// Constructor with word
+		public WordSaveCallback(Word w) {
+			refWord = w;
+		}
+
+		@Override // SaveCallback
+		public void done(ParseException e) {
+			// If found exception, it must be set some flag to identify the word is not sent yet.
+			if (e == null) {
+				refWord.removeOffline();
+			} else {
+				refWord.markOffline();
+			}
+			
+			// Save in local!
+			refWord.pinInBackground(null);
+			
+			// Callback
+			notifyWordWrite(e);
+		}
+	}
+	
+	/** TODO 
+	 * The OfflineWordSaveCallback class is the inner class to handle saving offline ones.
+	 * @author tchin
+	 *
+	 */
+	private class OfflineWordSaveCallback extends SaveCallback {
+		
+		// The reference word
+		private List<ParseObject> refWords;
+		
+		// Constructor
+		public OfflineWordSaveCallback(List<ParseObject> words) {
+			this.refWords =  words;
+		}
+				
+		@Override // SaveCallback
+		public void done(ParseException e) {
+			if (e == null) {
+				// Start syncing
+				doStartSyncing();
+			} else {
+				// Remark the words as offline again.
+				Iterator<ParseObject> it = refWords.iterator();
+				while (it.hasNext()) {
+					Word w = (Word) it.next();
+					w.markOffline();
+				}
+				
+				// Callback
+				finishFetching(e);
+			}
+		}
+	}
+	
+	/** TODO 
+	 * The VoiceSaveCallback class is the inner class to handle recorded voice saving.
+	 * @author tchin
+	 *
+	 */
+	private class VoiceSaveCallback extends SaveCallback {
+		
+		// Reference word
+		private Word refWord;
+		
+		// Reference file
+		private ParseFile refFile;
+		
+		// Constructor with word
+		public VoiceSaveCallback(Word w, ParseFile file) {
+			refWord = w;
+			refFile = file;
+		}
+
+		@Override // SaveCallback
+		public void done(ParseException e) {
+			if (e == null) {
+				// Attach the file to that word and resave again.
+				refWord.saveRecordVoiceFile(refFile);
+				refWord.saveInBackground(new WordSaveCallback(refWord));
+			}
+		}
+	}
+	
+	/** TODO 
+	 * The VoiceGetDataCallback class is the inner class to handle recorded voice fetching.
+	 * @author tchin
+	 *
+	 */
+	private class VoiceGetDataCallback extends GetDataCallback {
+		
+		// Reference word
+		private Word refWord;
+		
+		// Constructor with word
+		public VoiceGetDataCallback(Word w) {
+			refWord = w;
+		}
+		
+		@Override // GetDataCallback
+		public void done(byte[] data, ParseException e) {
+			try {
+				File file = new File(refWord.getSoundPath());
+				if (file.exists()) file.delete(); // Delete first if existed!
+		        BufferedOutputStream buf = new BufferedOutputStream(new FileOutputStream(file));
+		        buf.write(data);
+		        buf.flush();
+		        buf.close();
+			} catch (Exception ex) {
+			}
+		}
+	}
+	
+	/** TODO 
+	 * The WordFindCallback class is the inner class to handle finding.
+	 * @author tchin
+	 *
+	 */
+	private class WordFindCallback extends FindCallback<Word> {
+
+		@Override // FindCallback
+		public void done(List<Word> objects, ParseException e) {
+			if (e == null) {
+				if (!localMode) {
+					ParseObject.unpinAllInBackground(objects); // Remove old.
+					ParseObject.pinAllInBackground(objects); // Add new.
+				}
+				currentUser.addWords(objects);
+				
+				// Get meanings and voice.
+				Iterator<Word> it = objects.iterator();
+				while (it.hasNext()) {
+					Word w = it.next();
+					
+					// If this word are offline, don't override its file.
+					ParseFile file = w.getRecordVoiceFile();
+					if (file != null && !w.isOffline()) { 
+						file.getDataInBackground(new VoiceGetDataCallback(w));
+					}
+					
+					// Meanings
+					List<Meaning> meanings = w.getMeanings();
+					Iterator<Meaning> itm = meanings.iterator();
+					meaningCount += meanings.size();
+					while (itm.hasNext()) {
+						Meaning m = itm.next();
+						fetchAllMeanings(m);
+					}
+				}
+					
+				// No meaning
+				if (meaningCount == 0) finishFetching(e);
+			} else {
+				finishFetching(e);
+			}
+		}
+	}
+	
+	/** TODO 
+	 * The MeaningGetCallback class is the inner class to handle finding meanings.
+	 * @author tchin
+	 *
+	 */
+	private class MeaningGetCallback extends GetCallback<Meaning> {
+		
+		// The reference meaning
+		private Meaning meaning;
+		
+		// Constructor
+		public MeaningGetCallback(Meaning meaning) {
+			this.meaning = meaning;
+		}
+
+		@Override // GetCallback
+		public void done(Meaning object, ParseException e) {
+			if (e == null) {
+				meaning = object;
+				meaning.pinInBackground(null);
+				if (--meaningCount == 0) {
+					finishFetching(e);
+				}
+			} else {
+				finishFetching(e);
+			}
+		}
+	}
+	
+	/** TODO 
+	 * The MarkedWordDeleteCallback class is the inner class to handle marked words deletion.
+	 * @author tchin
+	 *
+	 */
+	private class MarkedWordDeleteCallback extends DeleteCallback {
+		
+		// The reference word
+		private List<ParseObject> refWords;
+		
+		// Constructor
+		public MarkedWordDeleteCallback(List<ParseObject> words) {
+			this.refWords =  words;
+		}
+
+		@Override // DeleteCallback
+		public void done(ParseException e) {
+			if (e == null || e.getCode() == ParseException.OBJECT_NOT_FOUND
+				|| e.getCode() == ParseException.MISSING_OBJECT_ID) {
+				// Delete marked ones in local.
+				ParseObject.unpinAllInBackground(refWords);
+				words.removeAll(refWords);
+				filterWords.removeAll(refWords);
+				currentUser.removeWords(refWords);
+				markedWords.removeAll(refWords);
+				
+				// Sort
+				sort(currentUser.isAscendingSort());
+			}
+			
+			// Callback
+			notifyWordErase(e);
+		}
+	}
+	
+	/** TODO 
+	 * The OfflineWordDeleteCallback class is the inner class to handle marked words deletion.
+	 * @author tchin
+	 *
+	 */
+	private class OfflineWordDeleteCallback extends DeleteCallback {
+		
+		// The reference word
+		private List<ParseObject> refWords;
+		
+		// Constructor
+		public OfflineWordDeleteCallback(List<ParseObject> words) {
+			this.refWords =  words;
+		}
+
+		@Override // DeleteCallback
+		public void done(ParseException e) {
+			if (e == null || e.getCode() == ParseException.OBJECT_NOT_FOUND 
+				|| e.getCode() == ParseException.MISSING_OBJECT_ID) {
+				// Synchronously delete marked ones in local.
+				try {
+					ParseObject.unpinAll(refWords);
+					
+					words.removeAll(refWords);
+					filterWords.removeAll(refWords);
+					currentUser.removeWords(refWords);
+					markedWords.removeAll(refWords);
+
+					// Sort
+					sort(currentUser.isAscendingSort());
+				} catch (ParseException pe) {
+				}
+			}
+			
+			// Move added step if found.
+			if (handleWordOfflineAdded()) {
+				return;
+			}
+			
+			// Start syncing
+			doStartSyncing();
+		}
+	}
+	
+	/** TODO 
+	 * The WordCountCallback class is the inner class to handle counting words.
+	 * @author tchin
+	 *
+	 */
+	private class WordCountCallback extends CountCallback {
+
+		@Override // CountCallback
+		public void done(int count, ParseException e) {
+			if (e == null) { // No error
+				currentUser.setTotalWords(count);
+				fetchAllWords();
+			} else {
+				finishFetching(e);
+			}
+		}
+	}
+}

@@ -1,0 +1,459 @@
+package com.threet.game.view;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.parse.ParseException;
+import com.parse.ParseUser;
+import com.threet.game.R;
+import com.threet.game.model.User;
+import com.threet.game.model.Word;
+import com.threet.game.module.VoicePlayer;
+import com.threet.game.module.WordComposer;
+import com.threet.game.module.WordComposerListener;
+import com.threet.game.util.CustomDialog;
+import com.threet.game.util.CustomDialogListener;
+
+/**
+ * The WordDisplayActivity class is the display view.
+ * @author tchin
+ *
+ */
+public class WordDisplayActivity extends BaseActivity 
+								 implements WordComposerListener, TitleViewListener, 
+								 OnRefreshListener<ListView>, CustomDialogListener {
+
+	public static final int WORD_ADDING_ACTIVITY_RESULT = 100;
+	public static final int WORD_EDITING_ACTIVITY_RESULT = 200;
+	public static final int LOGOUT_ACTIVITY_RESULT = 300;
+	public static final String EDIT_WORD_KEY = "edited_word";
+	
+	// The remove view
+	private LinearLayout removeView;
+	
+	// The sync view
+	private RelativeLayout syncView;
+	
+	// The loading in cloud
+	private ImageView loadingImage;
+
+	// The no word view
+	private RelativeLayout noWordView;
+
+	// The number of removed items
+	private TextView numRemovedItemTextView;
+	
+	// The add text
+	private TextView addTextView;
+	
+	// The no word info text
+	private TextView noWordTextView;
+	
+	// The list view
+	private PullToRefreshListView wordList;
+	
+	// The title view
+	private TitleView titleView;
+	
+	// The word adapter
+	private WordAdapter wordAdapter;
+	
+	// The word composer
+	private WordComposer composer;
+	
+	// The voice player
+	private VoicePlayer player;
+	
+	// The text search
+	private String searchText;
+	
+	// The current user
+	private User user;
+	
+	// The flag indicates whether items can be searched.
+	private boolean searchMode;
+
+	@Override // TODO BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.word_display);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    // Check which request we're responding to
+	    if (requestCode == WORD_ADDING_ACTIVITY_RESULT || requestCode == WORD_EDITING_ACTIVITY_RESULT) {
+	        // Make sure the request was successful
+	        if (resultCode == RESULT_OK) {
+	        	// Update list.
+	        	updateView();
+	        }
+	    } else if (requestCode == LOGOUT_ACTIVITY_RESULT && resultCode == RESULT_OK) {
+	    	// Reset the composer.
+	    	composer.reset();
+	    	
+	    	// Back to login page.
+	    	Intent intent = new Intent(this, LoginActivity.class);
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			startActivity(intent);
+			finish();
+	    }
+	}
+	
+	@Override
+	public void onBackPressed() {
+		if (searchMode) {
+			disableSearch();
+		} else {
+			super.onBackPressed();
+		}
+	}
+	
+	// TODO Layout Methods
+	/**
+	 * The "onAddWord" will be invoked when users click on the add button.
+	 * @param v
+	 */
+	public void onAddWord(View v) {
+		// Go to the adding page.
+		Intent intent = new Intent(this, WordComposerActivity.class);
+		startActivityForResult(intent, WORD_ADDING_ACTIVITY_RESULT);
+	}
+	
+	/**
+	 * The "onRemoveWords" will be invoked when users click on the remove button.
+	 * @param v
+	 */
+	public void onRemoveWords(View v) {
+		int count = composer.getCountMarkedWord();
+		String text = count > 1 ? String.format(getString(R.string.plural_remove_confirmation_question), count) : getString(R.string.singular_remove_confirmation_question);
+		
+		// Show confirmation dialog.
+		CustomDialog.showDialog(this, this, null, getString(R.string.app_name), text, true);
+	}
+	
+	/**
+	 * The word item on the list view is clicked.
+	 * @param v
+	 */
+	public void onWordItemChecked(View v) {
+		Word w = (Word) v.getTag();
+		composer.markWord(w);
+
+		// Show the remove view with a number of marked items. 
+		if (composer.hasMarkedWord()) {
+			removeView.setVisibility(composer.isSync() ? View.GONE : View.VISIBLE);
+			int count = composer.getCountMarkedWord();
+			String text = count > 1 ? String.format(getString(R.string.plural_remove_item_format), count) : getString(R.string.singular_remove_item_format);
+			numRemovedItemTextView.setText(text);	
+		} else {
+			removeView.setVisibility(View.GONE);
+		}
+		
+		wordAdapter.notifyDataSetChanged();
+	}
+	
+	/**
+	 * The word item on the list view is edited.
+	 * @param v
+	 */
+	public void onWordItemEdited(View v) {
+		Word w = (Word) v.getTag();
+		
+		// Mark the word as revised.
+		composer.setRevisedWord(w);
+		
+		// Go to the editing page.
+		Intent intent = new Intent(this, WordComposerActivity.class);
+		intent.putExtra(EDIT_WORD_KEY, true);
+		startActivityForResult(intent, WORD_EDITING_ACTIVITY_RESULT);
+	}
+	
+	/**
+	 * The "onPlayVoice" will be invoked when users click on the speaker button.
+	 * @param v
+	 */
+	public void onPlayVoice(View v) {
+		Word w = (Word) v.getTag();
+		player.play(w.getSoundPath());
+	}
+	
+	/**
+	 * The "onRetry" will be invoked when users click on the retry button.
+	 * @param v
+	 */
+	public void onRetry(View v) {
+		if (noWordTextView.getText().equals(getString(R.string.no_word_touch_retry_text))) {
+			// Start from local first.
+			startFetching(true);	
+		}
+	}
+	
+	@Override // TODO CustomDialogListener
+	public void onYesButtonClicked(String dialogId) {
+		// Remove.
+		composer.eraseMarkWords();
+	}
+
+	@Override
+	public void onNoButtonClicked(String dialogId) {
+	}
+
+	@Override // TODO WordComposerListener
+	public void onWordSyncUpdate(boolean localMode, Exception error) {
+		if (error == null) { // No Error
+			if (!composer.hasWords() && localMode) {
+				// Take from server.
+				startFetching(false);
+			} else {
+				updateView();
+			}
+		} else { // Found error!
+			updateView();
+			String text = getString(R.string.server_technical_error_message);
+			if (error instanceof ParseException) {
+				ParseException pe = (ParseException) error;
+				if (pe.getCode() == ParseException.CONNECTION_FAILED)
+					text = getString(R.string.no_internet_error_text);
+			} else if (error instanceof IOException) {
+				text = getString(R.string.no_internet_error_text);
+			}
+			CustomDialog.showDialog(this, null, null, getString(R.string.app_name), text, false);
+		}
+	}
+	
+	@Override
+	public void onWordEraseDone(Exception e) {
+		if (e == null) {
+			// Hide the remove button.
+			removeView.setVisibility(View.GONE);
+			
+			// Update the list.
+			updateView();
+		} else {
+			// Update the list.
+			updateView();
+			String text = getString(R.string.server_technical_error_message);
+			if (e instanceof ParseException) {
+				ParseException pe = (ParseException) e;
+				if (pe.getCode() == ParseException.CONNECTION_FAILED)
+					text = getString(R.string.no_internet_error_text);
+			}
+			CustomDialog.showDialog(this, null, null, getString(R.string.app_name), text, false);
+		}
+	}
+	
+	@Override
+	public void onWordWriteDone(Exception e) {
+	}
+	
+	@Override // TODO TitleViewListener
+	public void onSearchClicked(String text) {
+		searchText = text;
+		enableSearch();
+	}
+	
+	@Override
+	public void onSearchCancel() {
+		disableSearch();
+	}
+
+	@Override
+	public void onQuizClicked() {
+		Intent intent = new Intent(this, QuizActivity.class);
+		startActivity(intent);
+	}
+	
+	@Override
+	public void onSortClicked(boolean ascending) {
+		user.setAscendingSort(ascending);
+		composer.sort(ascending);
+		updateView();
+	}
+
+	@Override
+	public void onSearching(String text) {
+		searchText = text;
+		updateView();
+	}
+	
+	@Override
+	public void onSettingsClicked() {
+		Intent intent = new Intent(this, SettingsActivity.class);
+		startActivityForResult(intent, LOGOUT_ACTIVITY_RESULT);;
+	}
+
+	@Override // TODO OnRefreshListener
+	public void onRefresh(PullToRefreshBase<ListView> refreshView) {
+		startFetching(false);
+	}
+
+	// TODO Protected Methods
+	/**
+	 * The "initActivity" method comes from the BaseActivity class that will be invoked to initialize variables.
+	 */
+	protected void initActivity() {
+		// UIs
+		titleView = (TitleView) findViewById(R.id.title_view);
+		titleView.addObserver(this);
+		wordList = (PullToRefreshListView) findViewById(R.id.word_list);
+		wordList.setOnRefreshListener(this);
+		addTextView = (TextView) findViewById(R.id.add_button);
+		noWordTextView = (TextView) findViewById(R.id.no_word_text);
+		numRemovedItemTextView = (TextView) findViewById(R.id.num_removed_items);
+		removeView = (LinearLayout) findViewById(R.id.remove_layout);
+		noWordView = (RelativeLayout) findViewById(R.id.no_word_view);
+		syncView = (RelativeLayout) findViewById(R.id.sync_view);
+		syncView.setVisibility(View.VISIBLE);
+		loadingImage = (ImageView) findViewById(R.id.loading_img);
+		loadingImage.startAnimation(AnimationUtils.loadAnimation(this, R.anim.linear_interpolator));
+		
+		// Objects
+		user = (User) ParseUser.getCurrentUser();
+		searchText = "";
+		player = VoicePlayer.getInstance();
+		composer = WordComposer.getInstance();
+		composer.addObserver(this);
+		composer.setCurrentUser(user);
+		wordAdapter = new WordAdapter(this, composer.getFilterWordArray(""));
+		wordList.setAdapter(wordAdapter);
+		
+		if (composer.hasWords()) {
+			updateView();
+			titleView.updateQuizIcon();
+		} else {
+			// Try getting all words from local.
+			startFetching(true);
+		}
+	}
+	
+	// TODO Private Methods
+	/**
+	 * Start fetching from the client first.
+	 */
+	private void startFetching(boolean localMode) {
+		composer.sync(localMode, user);
+		updateView();
+	}
+	
+	/**
+	 * Show the search view and hide the info view
+	 */
+	private void enableSearch() {
+		searchMode = true;
+		updateView();
+	}
+	
+	/**
+	 * Show the info view and hide the search view
+	 */
+	private void disableSearch() {
+		searchMode = false;
+		searchText = "";
+		titleView.cancelSearching();
+		updateView(); 
+	}
+	
+	/**
+	 * Update the list.
+	 * @return the number of items in list
+	 */
+	private int updateList() {
+		// Clear all.
+		wordAdapter.clear();
+		wordAdapter.setSearchMode(searchMode);
+		
+		// Fill only matching text.
+		int count = 0;
+		ArrayList<Word> tmp = new ArrayList<Word>();
+		tmp.addAll(composer.getFilterWordArray(searchText));
+		Iterator<Word> it = tmp.iterator();
+		while (it.hasNext()) {
+			Word w = it.next();
+			wordAdapter.add(w);
+			// Fixed the duplicated issue.
+			if (++count != wordAdapter.getCount()) {
+				wordAdapter.remove(w);	
+			}
+		}
+		
+		// Refresh the list.
+		wordAdapter.notifyDataSetChanged();
+
+		return wordAdapter.getCount();
+	}
+	
+	/**
+	 * Update the views.
+	 */
+	private void updateView() {
+		// Syncing?
+		if (composer.isSync()) {
+			if (composer.hasWords()) {
+				updateList();
+				titleView.updateWordCount();
+				syncView.setVisibility(View.GONE);
+				wordList.setVisibility(View.VISIBLE);
+			} else {
+				syncView.setVisibility(View.VISIBLE);
+				wordList.setVisibility(View.GONE);
+			}
+			removeView.setVisibility(View.GONE);
+			noWordView.setVisibility(View.GONE);
+			addTextView.setVisibility(View.GONE);
+			return;
+		}
+		
+		// Data Ready, then check the mode, searching or normal.
+		int countListItems = updateList();
+		int countTotalItems = composer.getCountWord();
+		syncView.setVisibility(View.GONE);
+		wordList.onRefreshComplete();
+		if (searchMode) {
+			// Searching Mode
+			titleView.updateWordCount();
+			addTextView.setVisibility(View.GONE);
+			removeView.setVisibility(composer.hasMarkedWord() ? View.VISIBLE : View.GONE);
+			if (countListItems == 0) { // No item in the list.
+				noWordView.setVisibility(View.VISIBLE);
+				wordList.setVisibility(View.GONE);
+				// No word added
+				if (countTotalItems == 0) {
+					noWordTextView.setText(getString(R.string.no_word_touch_retry_text));
+				} else { // No result found
+					noWordTextView.setText(getString(R.string.no_result_found_information));
+				}
+			} else {
+				// There are some items in the list.
+				noWordView.setVisibility(View.GONE);
+				wordList.setVisibility(View.VISIBLE);
+				wordAdapter.notifyDataSetChanged();
+			}
+		} else {
+			// Normal Mode
+			removeView.setVisibility(View.GONE);
+			addTextView.setVisibility(View.VISIBLE);
+			if (countListItems == 0) {
+				noWordView.setVisibility(View.VISIBLE);
+				wordList.setVisibility(View.GONE);
+			} else {
+				noWordView.setVisibility(View.GONE);
+				wordList.setVisibility(View.VISIBLE);
+				wordAdapter.notifyDataSetChanged();
+			}
+		}
+	}
+}

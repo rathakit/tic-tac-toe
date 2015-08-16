@@ -1,0 +1,342 @@
+package com.mobile.now.view;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Iterator;
+
+import com.mobile.now.model.Meaning;
+import com.mobile.now.model.User;
+import com.mobile.now.model.Word;
+import com.mobile.now.model.MeaningType;
+import com.mobile.now.module.VoicePlayer;
+import com.mobile.now.module.VoicePlayerListener;
+import com.mobile.now.module.VoiceRecorder;
+import com.mobile.now.module.WordComposer;
+import com.mobile.now.util.CustomDialog;
+import com.mobile.now.util.Util;
+import com.parse.ParseUser;
+import com.threet.game.R;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+
+/**
+ * The WordComposerActivity class is the form view.
+ * @author tchin
+ *
+ */
+public class WordComposerActivity extends BaseActivity implements VoicePlayerListener {
+	
+	// The record button
+	private ImageView recordImgView;
+	
+	// The play button
+	private ImageView playImgView;
+	
+	// The word edit text
+	private EditText wordEditText;
+	
+	// The Adj. edit text
+	private EditText adjEditText;
+
+	// The Adv. edit text
+	private EditText advEditText;
+
+	// The Conj. edit text
+	private EditText conjEditText;
+
+	// The Int. edit text
+	private EditText intEditText;
+
+	// The noun edit text
+	private EditText nounEditText;
+
+	// The pronoun edit text
+	private EditText pronEditText;
+	
+	// The prep. edit text
+	private EditText prepEditText;
+
+	// The verb edit text
+	private EditText verbEditText;
+	
+	// The note edit text
+	private EditText noteEditText;
+	
+	// The word composer
+	private WordComposer composer;
+	
+	// The word (new or revised)
+	private Word word;
+	
+	// The voice recorder
+	private VoiceRecorder recorder;
+	
+	// The voice player
+	private VoicePlayer player;
+	
+	// The flag indicates recording status
+	private boolean recording;	
+	
+	// The flag indicates revised mode
+	private boolean revisedMode;
+
+	@Override // BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.word_composer);
+	}
+	
+	// Layout's Methods
+	/**
+	 * The "onRecord" will be invoked when users click on the record button.
+	 * @param v
+	 */
+	public void onRecord(View v) {
+		if (recording) { // Already record, so stop it!
+			recorder.stopRecording();
+			recordImgView.setImageResource(R.drawable.mic);
+			playImgView.setVisibility(View.VISIBLE);
+		} else { // not record, so start it!
+			recordImgView.setImageResource(R.drawable.pause);
+			recorder.startRecording(Word.DEFAULT_RECORDED_VOICE_FULL_PATH);
+			playImgView.setVisibility(View.GONE);
+		}
+		
+		// Invert the flag.
+		recording = !recording;
+	}
+	
+	/**
+	 * The "onPlay" will be invoked when users click on the play button.
+	 * @param v
+	 */
+	public void onPlay(View v) {
+		if (player.isPlaying()) { // Already playing, stop it!
+			player.stop();
+			playImgView.setImageResource(R.drawable.play);
+		} else { // Otherwise, start it!
+			player.play(Word.DEFAULT_RECORDED_VOICE_FULL_PATH);
+			playImgView.setImageResource(R.drawable.pause);
+		}
+	}
+	
+	/**
+	 * The "onSave" will be invoked when users click on the save button.
+	 * @param v
+	 */
+	public void onSave(View v) {
+		// If recording, stop it!
+		if (recording) onRecord(null);
+		
+		// Read each item and put in the object.
+		setWordItem();
+		
+		// Set the voice file.
+		setVoiceFile();
+		
+		// Try saving...
+		if (composer.writeWord(word, revisedMode)) {
+			// Close activity with result.
+			setResult(Activity.RESULT_OK);
+			finish();
+		} else {
+			CustomDialog.showDialog(this, null, null, getString(R.string.app_name), getString(R.string.no_word_error_message), false);
+		}
+	}
+	
+	/**
+	 * The "onCancel" will be invoked when users click on the cancel button.
+	 * @param v
+	 */
+	public void onCancel(View v) {
+		// User change his mind to note the word.
+		deleteVoiceFile();
+		finish();
+	}
+
+	@Override // VoicePlayerListener
+	public void onVoicePlayFinished() {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				playImgView.setImageResource(R.drawable.play);
+			}
+		});
+	}
+	
+	// Protected Methods
+	/**
+	 * The template method initializes the activity.
+	 */
+	protected void initActivity() {
+		// UIs
+		recordImgView = (ImageView) findViewById(R.id.record_button);
+		playImgView = (ImageView) findViewById(R.id.play_button);
+		wordEditText = (EditText) findViewById(R.id.word);
+		adjEditText = (EditText) findViewById(R.id.adj_meaning);
+		advEditText = (EditText) findViewById(R.id.adv_meaning);
+		conjEditText = (EditText) findViewById(R.id.conj_meaning);
+		intEditText = (EditText) findViewById(R.id.int_meaning);
+		nounEditText = (EditText) findViewById(R.id.noun_meaning);
+		pronEditText = (EditText) findViewById(R.id.pron_meaning);
+		prepEditText = (EditText) findViewById(R.id.prep_meaning);
+		verbEditText = (EditText) findViewById(R.id.verb_meaning);
+		noteEditText = (EditText) findViewById(R.id.note_meaning);
+		
+		// Objects
+		composer = WordComposer.getInstance();
+		Intent intent = getIntent();
+		revisedMode = intent.hasExtra(WordDisplayActivity.EDIT_WORD_KEY);
+		if (revisedMode) { // Revised word sent from the previous page.
+			// 1). Get
+			word = composer.getRevisedWord();
+			
+			// 2). Fill
+			fillForm();
+			
+			// 3). Create the default voice if found.
+			if (word.hasRecordFile()) {
+				File file = new File(word.getSoundPath());
+				if (file.exists()) {
+					File toFile = new File(Word.DEFAULT_RECORDED_VOICE_FULL_PATH);
+					if (toFile.exists()) toFile.delete();
+					try {
+						Util.copy(file, toFile);
+					} catch (IOException e) {
+					}
+				}
+			}
+		} else { // New Word
+			word = new Word();
+		}
+		recorder = VoiceRecorder.getInstance(); 
+		player = VoicePlayer.getInstance();
+		player.addListener(this);
+	}
+	
+	// Private Methods
+	/**
+	 * Take the revised word and fill in the form as default.
+	 */
+	private void fillForm() {
+		// Word
+		wordEditText.setText(word.getWord());
+		
+		// Meanings
+		Iterator<Meaning> it = word.getMeanings().iterator();
+		while (it.hasNext()) {
+			Meaning m = it.next();
+			switch (m.getMeaningType()) {
+			case Adjective: adjEditText.setText(m.getMeaning()); break;
+			case Adverb: advEditText.setText(m.getMeaning()); break;
+			case Conjunction: conjEditText.setText(m.getMeaning()); break;
+			case Interjection: intEditText.setText(m.getMeaning()); break;
+			case Noun: nounEditText.setText(m.getMeaning()); break;
+			case Pronoun: pronEditText.setText(m.getMeaning()); break;
+			case Preposition: prepEditText.setText(m.getMeaning()); break;
+			case Verb: verbEditText.setText(m.getMeaning()); break;
+			case Memo: noteEditText.setText(m.getMeaning()); break;
+			}
+		}
+		
+		// Play Control
+		playImgView.setVisibility(word.hasRecordFile() ? View.VISIBLE : View.GONE);
+	}
+	
+	/**
+	 * Set value into object.
+	 */
+	private void setWordItem() {
+		// Word
+		String wordText = wordEditText.getText().toString().trim();
+		if (wordText.length() > 0) {
+			word.setWord(wordText);
+		} else {
+			wordEditText.setText("");
+		}
+		
+		// Remove all meanings.
+		word.removeAllMeanings();
+		
+		// Adjective
+		String adj = adjEditText.getText().toString();
+		if (adj != null && adj.trim().length() > 0) {
+			word.addMeaning(new Meaning(adj, MeaningType.Adjective));
+		}
+		
+		// Adverb
+		String adv = advEditText.getText().toString();
+		if (adv != null && adv.trim().length() > 0) {
+			word.addMeaning(new Meaning(adv, MeaningType.Adverb));
+		}
+		
+		// Conjunction
+		String conj = conjEditText.getText().toString();
+		if (conj != null && conj.trim().length() > 0) {
+			word.addMeaning(new Meaning(conj, MeaningType.Conjunction));
+		}
+		
+		// Interjection
+		String interjection = intEditText.getText().toString();
+		if (interjection != null && interjection.trim().length() > 0) {
+			word.addMeaning(new Meaning(interjection, MeaningType.Interjection));
+		}
+		
+		// Noun
+		String noun = nounEditText.getText().toString();
+		if (noun != null && noun.trim().length() > 0) {
+			word.addMeaning(new Meaning(noun, MeaningType.Noun));
+		}
+		
+		// Pronoun
+		String pron = pronEditText.getText().toString();
+		if (pron != null && pron.trim().length() > 0) {
+			word.addMeaning(new Meaning(pron, MeaningType.Pronoun));
+		}
+		
+		// Preposition
+		String prep = prepEditText.getText().toString();
+		if (prep != null && prep.trim().length() > 0) {
+			word.addMeaning(new Meaning(prep, MeaningType.Preposition));
+		}
+		
+		// Verb
+		String verb = verbEditText.getText().toString();
+		if (verb != null && verb.trim().length() > 0) {
+			word.addMeaning(new Meaning(verb, MeaningType.Verb));
+		}
+		
+		// Note
+		String note = noteEditText.getText().toString();
+		if (note != null && note.trim().length() > 0) {
+			word.addMeaning(new Meaning(note, MeaningType.Memo));
+		}
+		
+		// Owner
+		word.setOwner((User) ParseUser.getCurrentUser());
+	}
+	
+	/**
+	 * Set the voice file.
+	 */
+	private void setVoiceFile() {
+		File file = new File(Word.DEFAULT_RECORDED_VOICE_FULL_PATH);
+		if (file.exists() && word.getWord() != null) {
+			String toPath = String.format("%s%s.3gp", Word.RECORDED_VOICE_BASE_PATH, word.getFileName());
+			File toFile = new File(toPath);
+			if (toFile.exists()) toFile.delete();
+			if (file.renameTo(toFile)) word.setSoundPath(toPath);
+		}
+	}
+	
+	/**
+	 * Delete the voice file.
+	 */
+	private void deleteVoiceFile() {
+		File file = new File(Word.DEFAULT_RECORDED_VOICE_FULL_PATH);
+		if (file.exists()) file.delete();
+	}
+}

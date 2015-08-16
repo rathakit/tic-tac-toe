@@ -1,0 +1,42 @@
+package com.threet.game.view;
+
+import com.threet.game.R;
+import com.threet.game.module.Board;
+import com.threet.game.module.Gamer;
+import com.threet.game.module.Robot;
+import com.threet.game.module.Status;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Toast;
+
+/**
+ * The LoginActivity is the login view.
+ * @author tchin
+ *
+ */
+public class PlayerActivity extends BaseActivity implements OnItemClickListener {
+	
+	// TODO BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.player);
+	}
+	
+	// TODO Layout's Methods
+	public void selectOnePlayer(View v) {
+		
+	}
+	
+	public void selectTwoPlayer(View v) {
+		
+	}
+	
+	// TODO Protected Methods
+	protected void initActivity() {
+	}
+		
+}

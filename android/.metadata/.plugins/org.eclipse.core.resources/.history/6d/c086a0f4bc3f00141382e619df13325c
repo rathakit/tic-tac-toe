@@ -1,0 +1,156 @@
+package com.mobile.now.model;
+
+import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import com.mobile.now.App;
+import com.parse.ParseClassName;
+import com.parse.ParseObject;
+import com.mobile.now.R;
+
+/**
+ * The Meaning class keeps the meaning of word.
+ * @author tchin
+ *
+ */
+@ParseClassName("Meaning")
+public class Meaning extends ParseObject implements Parcelable {
+
+	// This field is needed for Android to be able to create new objects, individually or as arrays.
+	public static final Parcelable.Creator<Meaning> CREATOR = 
+		new Parcelable.Creator<Meaning>() {
+			public Meaning createFromParcel(Parcel in) {
+				return new Meaning(in);
+			}
+
+			public Meaning[] newArray(int size) {
+				return new Meaning[size];
+			}
+		};
+			
+	// The meaning
+	private String meaning;
+	
+	// The meaning type
+	private MeaningType meaningType;
+	
+	// Default Constructor
+	public Meaning() {
+	}
+	
+	// Overload Constructor
+	public Meaning(String meaning, MeaningType meaningType) {
+		setMeaning(meaning);
+		setMeaningType(meaningType);
+	}
+
+	public Meaning(Parcel in) {
+		meaning = in.readString();
+		meaningType = convertToMeaningType(in.readInt());
+	}
+
+	@Override // Parcelable
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(getMeaning());
+		dest.writeInt(getMeaningType().ordinal());
+	}
+	
+	// Public Methods
+	/**
+	 * Set the meaning of word.
+	 * @param meaning
+	 */
+	public void setMeaning(String meaning) {
+		this.meaning = meaning;
+		put("meaning", meaning);
+	}
+	
+	/**
+	 * Set the meaning type.
+	 * @param meaning type
+	 */
+	public void setMeaningType(MeaningType meaningType) {
+		this.meaningType = meaningType;
+		put("meaningType", meaningType.ordinal());
+	}
+	
+	/**
+	 * Get the meaning of word.
+	 * @return meaning
+	 */
+	public String getMeaning() {
+		if (meaning == null) {
+			meaning = getString("meaning");
+		}
+		return meaning;
+	}
+	
+	/**
+	 * Get the type of meaning.
+	 * @return meaning type
+	 */
+	public MeaningType getMeaningType() {
+		if (meaningType == null) {
+			meaningType = convertToMeaningType(getInt("meaningType"));
+		}
+		return meaningType;
+	}
+	
+	/**
+	 * Get the type of meaning in string.
+	 * @return string
+	 */
+	public String getMeaningTypeInString() {
+		if (meaningType == null) {
+			meaningType = convertToMeaningType(getInt("meaningType"));
+		}
+		return convertMeaningTypeToString(meaningType.ordinal());
+	}
+	
+	/**
+	 * Convert number to MeaningType
+	 * @param number
+	 * @return
+	 */
+	private MeaningType convertToMeaningType(int number) {
+		switch (number) {
+		case 0: return MeaningType.Adjective;
+		case 1: return MeaningType.Adverb;
+		case 2: return MeaningType.Conjunction;
+		case 3: return MeaningType.Interjection;
+		case 4: return MeaningType.Noun;
+		case 5: return MeaningType.Pronoun;
+		case 6: return MeaningType.Preposition;
+		case 7: return MeaningType.Verb;
+		case 8: return MeaningType.Memo;
+		}
+		return null;
+	}
+	
+	/**
+	 * Convert MeaningType to String
+	 * @param type
+	 * @return
+	 */
+	private String convertMeaningTypeToString(int type) {
+		Context context = App.getContext();
+		switch (type) {
+		case 0: return context.getString(R.string.adjective_abbreviation);
+		case 1: return context.getString(R.string.adverb_abbreviation);
+		case 2: return context.getString(R.string.conjunction_abbreviation);
+		case 3: return context.getString(R.string.interjection_abbreviation);
+		case 4: return context.getString(R.string.noun_abbreviation);
+		case 5: return context.getString(R.string.pronoun_abbreviation);
+		case 6: return context.getString(R.string.preposition_abbreviation);
+		case 7: return context.getString(R.string.verb_abbreviation);
+		case 8: return context.getString(R.string.memo_text);
+		}
+		return null;
+	}
+}

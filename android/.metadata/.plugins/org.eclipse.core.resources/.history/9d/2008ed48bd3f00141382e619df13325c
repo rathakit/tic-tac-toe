@@ -1,0 +1,74 @@
+package com.threet.game.view;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+
+import com.parse.ParseUser;
+import com.threet.game.R;
+import com.threet.game.util.CustomDialog;
+
+/**
+ * The ChangePasswordActivity is the changing password view.
+ * @author tchin
+ *
+ */
+public class ChangePasswordActivity extends BaseActivity {
+	
+	// The new password
+	private EditText newPasswordText;
+	
+	// The confirm password
+	private EditText confirmPasswordText;
+	
+	// BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.change_password);
+	}
+	
+	// TODO Layout's Methods
+	/**
+	 * The onDone will be invoked when clicking on the done button.
+	 * @param v
+	 */
+	public void onDone(View v) {
+		// New Password
+		String newPassword = newPasswordText.getText().toString().trim();
+		if (newPassword.length() < 8) {
+			CustomDialog.showDialog(this, null, null, getString(R.string.app_name), getString(R.string.length_password_error_message), false);
+			return;
+		}
+		
+		// Confirm Password
+		String confirmPassword = confirmPasswordText.getText().toString().trim();
+		if (confirmPassword.length() < 8) {
+			CustomDialog.showDialog(this, null, null, getString(R.string.app_name), getString(R.string.length_password_error_message), false);
+			return;
+		}
+		
+		// New & Confirm Matched?
+		if (newPassword.equals(confirmPassword)) {
+			ParseUser user = ParseUser.getCurrentUser();
+			user.setPassword(newPassword);
+			user.saveInBackground();
+			finish();
+		} else {
+			CustomDialog.showDialog(this, null, null, getString(R.string.app_name), getString(R.string.mismatch_password_error_message), false);
+		}
+	}
+	
+	/**
+	 * The onBackClicked will be invoked when clicking on the back button.
+	 * @param v
+	 */
+	public void onBackClicked(View v) {
+		finish();
+	}
+	
+	// TODO Protected Methods
+	protected void initActivity() {
+		// UIs
+		newPasswordText = (EditText) findViewById(R.id.new_password);
+		confirmPasswordText = (EditText) findViewById(R.id.confirm_password);
+	}
+}

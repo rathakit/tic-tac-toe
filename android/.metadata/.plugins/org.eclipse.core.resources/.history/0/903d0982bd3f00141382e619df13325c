@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.threet.game.view.TitleView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:background="@android:color/transparent"
+	android:paddingTop="5dp"
+	android:paddingBottom="5dp">
+	
+    <RelativeLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		<LinearLayout android:padding="8dp"
+	   		android:layout_width="40dp"
+	       	android:layout_height="40dp"
+	       	android:gravity="center"
+	       	android:visibility="gone"
+	       	android:id="@+id/quiz_button">
+		    <ImageView android:layout_width="wrap_content"
+		       	android:layout_height="wrap_content"
+		       	android:src="@drawable/quiz_ic"
+		       	android:scaleType="fitXY"/>
+	    </LinearLayout>
+	    
+		<LinearLayout
+	   		android:layout_width="40dp"
+	       	android:layout_height="40dp"
+	       	android:gravity="center"
+	       	android:layout_toRightOf="@id/quiz_button"
+	       	android:id="@+id/sort_button">
+		    <ImageView android:layout_width="wrap_content"
+		       	android:layout_height="wrap_content"
+		       	android:id="@+id/sort_image"
+		       	android:src="@drawable/sorting"
+		       	android:scaleType="fitXY"/>
+	    </LinearLayout>
+	    
+		<ImageView android:layout_width="40dp"
+	      	android:layout_height="12dp"
+	       	android:src="@drawable/now"
+	       	android:layout_centerInParent="true"
+	       	android:id="@+id/app_name"/>
+		
+		<LinearLayout android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:gravity="right"
+			android:orientation="horizontal">
+		    <LinearLayout android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:id="@+id/search_view"
+				android:visibility="gone"
+				android:gravity="right">
+				<LinearLayout android:padding="8dp"
+			   		android:layout_width="40dp"
+			       	android:layout_height="40dp"
+			       	android:layout_gravity="center_vertical"
+			       	android:id="@+id/search_ic">
+				    <ImageView android:layout_width="wrap_content"
+				       	android:layout_height="wrap_content"
+				       	android:src="@drawable/search_ic"
+				       	android:scaleType="fitXY"/>
+			    </LinearLayout>
+				
+				<EditText android:layout_width="0dp"
+			        android:layout_height="wrap_content"
+			        android:id="@+id/search_text"
+			        android:hint="@string/search_hint_text"
+			        android:textColorHint="@color/white"
+			        android:padding="10dp"
+			        android:textColor="@color/white"
+			       	android:layout_weight="1"
+			        android:textSize="16sp"
+			        android:background="@android:color/transparent"
+			       	android:layout_gravity="center_vertical"
+			        android:singleLine="true"/>
+				
+				<TextView android:layout_width="wrap_content"
+			       	android:layout_height="wrap_content"
+			       	android:textColor="@color/white"
+			       	android:textSize="16sp"
+			        android:id="@+id/count_item"
+			       	android:layout_gravity="center_vertical"/>
+				
+				<TextView android:layout_width="wrap_content"
+			       	android:layout_height="wrap_content"
+			       	android:textColor="@color/white"
+			       	android:textSize="16sp"
+			       	android:textStyle="bold"
+			       	android:padding="10dp"
+			        android:id="@+id/cancel"
+			       	android:layout_gravity="center_vertical"
+			       	android:text="@string/cancel_text" />
+			</LinearLayout>
+			
+		    <LinearLayout android:padding="8dp"
+		   		android:layout_width="40dp"
+		       	android:layout_height="40dp"
+		       	android:gravity="center"
+		       	android:id="@+id/settings">
+			    <ImageView android:layout_width="wrap_content"
+			       	android:layout_height="wrap_content"
+			       	android:src="@drawable/settings"
+			       	android:scaleType="fitXY"/>
+		    </LinearLayout>
+		    
+		    <LinearLayout android:padding="8dp"
+		   		android:layout_width="40dp"
+		       	android:layout_height="40dp"
+		       	android:gravity="center"
+		       	android:id="@+id/search_button">
+			    <ImageView android:layout_width="wrap_content"
+			       	android:layout_height="wrap_content"
+			       	android:src="@drawable/search_ic"
+			       	android:scaleType="fitXY"/>
+		    </LinearLayout>
+		</LinearLayout>
+	</RelativeLayout>
+</com.mobile.now.view.TitleView>

@@ -1,0 +1,181 @@
+package com.threet.game.module;
+
+import com.threet.game.model.SlotOwner;
+
+/**
+ * The Board class is the mainly responsible for the game board.
+ * @author tchin
+ *
+ */
+public class Board {
+
+	// The static variables
+	public static final int DIMENSION = 3;
+	
+	// The board
+	private int[][] slots;
+	
+	// Default Constructor
+	public Board() {
+		slots = new int[DIMENSION][DIMENSION];
+	}
+	
+	// TODO Public Methods
+	/**
+	 * Convert the int value to the SlotOwner enum.
+	 * @param val
+	 * @return The Status
+	 */
+	public static SlotOwner convert(int val) {
+		switch (val) {
+		case 1: return SlotOwner.GAMER;
+		case 2: return SlotOwner.ROBOT;
+		default: return SlotOwner.NONE;
+		}
+	}
+	
+	/**
+	 * Get the board item.
+	 * @return the board item
+	 */
+	public int[][] getSlots() {
+		return slots;
+	}
+	
+	/**
+	 * Take the ownership in a slot.
+	 * @param player
+	 * @param row
+	 * @param column
+	 * @return The taken status.
+	 */
+	public Status take(SlotOwner player, int row, int column) {
+		Status status = Status.CATCH;
+		try {
+			SlotOwner owner = convert(slots[row][column]);
+			
+			// The box is unoccupied.
+			if (owner == SlotOwner.NONE) {
+				// 1). Take it!
+				slots[row][column] = player.ordinal();
+				
+				// 2). Win?
+				if (isWin(player, row, column)) status = Status.WIN;
+				
+				// 3). Draw?
+			} else { // Oops! it's already taken.
+				status = Status.OCCUPIED;
+			}
+		} catch (ArrayIndexOutOfBoundsException e) {
+			status = Status.UNKNOWN;
+		}
+		
+		return status;
+	}
+	
+	/**
+	 * Renew a game.
+	 */
+	public void newGame() {
+		for (int i = 0; i < slots.length; i++) {
+			for (int j = 0; j < slots[i].length; j++) {
+				slots[i][j] = SlotOwner.NONE.ordinal();
+			}
+		}
+	}
+	
+	/** TODO Private Methods
+	 * Check whether the current player is now winner.
+	 * @param player
+	 * @return the winner status.
+	 */
+	private boolean isWin(SlotOwner player, int row, int column) {
+		// Row Validation
+		if (verifyRow(player, row)) return true;
+		
+		// Column Validation
+		if (verifyColumn(player, column)) return true;
+		
+		// Oblique Validation (Top-Down)
+		if (verifyObliqueTopDown(player)) return true;
+		
+		// Oblique Validation (Bottom-Up)
+		if (verifyObliqueBottomUp(player)) return true;
+		
+		return false;
+	}
+	
+	/** 
+	 * Verify the winner in oblique (left to right, top-down).
+	 * @param player
+	 * @param row
+	 * @param column
+	 * @return the winner status
+	 */
+	private boolean verifyObliqueTopDown(SlotOwner player) {
+		// Left to Right (Top-Down)
+		for (int i = 0; i < slots.length; i++) {
+			SlotOwner owner = convert(slots[i][i]);
+			if (owner != player) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Verify the winner in oblique (left to right, bottom-up).
+	 * @param player
+	 * @param row
+	 * @param column
+	 * @return the winner status
+	 */
+	private boolean verifyObliqueBottomUp(SlotOwner player) {
+		// Left to Right (Bottom-Up)
+		int j = 0;
+		for (int i = slots.length - 1; i >= 0; i--) {
+			SlotOwner owner = convert(slots[i][j]);
+			if (owner != player) {
+				return false;
+			}
+			
+			// Move next column.
+			j++;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Verify the winner in row.
+	 * @param player
+	 * @param row
+	 * @return the winner status
+	 */
+	private boolean verifyRow(SlotOwner player, int row) {
+		for (int i = 0; i < slots[row].length; i++) {
+			SlotOwner owner = convert(slots[row][i]);
+			if (owner != player) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Verify the winner in column.
+	 * @param player
+	 * @param column
+	 * @return the winner status
+	 */
+	private boolean verifyColumn(SlotOwner player, int column) {
+		for (int i = 0; i < slots.length; i++) {
+			SlotOwner owner = convert(slots[i][column]);
+			if (owner != player) {
+				return false;
+			}
+		}
+		return true;
+	}
+}

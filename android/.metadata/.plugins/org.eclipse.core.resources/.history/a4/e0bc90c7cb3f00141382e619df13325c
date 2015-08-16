@@ -1,0 +1,17 @@
+package com.threet.game.module;
+
+import com.threet.game.model.SlotOwner;
+
+public class Gamer extends Player {
+
+	// TODO Overload Constructor
+	public Gamer(SlotOwner player, Board board) {
+		super(player, board);
+	}
+
+	public Status take(int row, int column) {
+		if (getBoard() == null) return Status.UNKNOWN;
+		
+		return getBoard().take(getPlayer(), row, column);
+	}
+}

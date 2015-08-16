@@ -1,0 +1,23 @@
+package com.threet.game.view;
+
+import com.threet.game.R;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+/**
+ * The BaseActivity class is the mother activity.
+ * @author tchin
+ *
+ */
+public abstract class BaseActivity extends Activity {
+	
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.board);
+		initActivity();
+	}
+	
+	// Abstract Methods
+	protected void initActivity();
+}

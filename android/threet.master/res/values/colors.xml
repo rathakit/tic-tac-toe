@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#333</color>
+    <color name="white">#FFF</color>
+    <color name="white_transparent">#C0FFFFFF</color>
+    <color name="rollover_white_transparent">#C0EEEEEE</color>
+</resources>

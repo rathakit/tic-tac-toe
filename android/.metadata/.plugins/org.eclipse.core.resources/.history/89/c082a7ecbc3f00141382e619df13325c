@@ -1,0 +1,121 @@
+package com.mobile.now.view;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+
+import com.mobile.now.model.User;
+import com.mobile.now.util.CustomDialog;
+import com.mobile.now.util.CustomDialogListener;
+import com.mobile.now.util.Util;
+import com.parse.ParseException;
+import com.parse.SignUpCallback;
+import com.threet.game.R;
+
+/**
+ * The RegisterActivity is the sign-up view.
+ * @author tchin
+ *
+ */
+public class RegisterActivity extends BaseActivity implements CustomDialogListener {
+	
+	private static final String SIGN_UP_DIALOG = "sign_up";
+	
+	// The username
+	private EditText usernameText;
+	
+	// The password
+	private EditText passwordText;
+	
+	// The email
+	private EditText emailText;
+	
+	// BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.register);
+	}
+	
+	// Layout's Methods
+	/**
+	 * The onRegister will be invoked when clicking on the create button
+	 * @param v
+	 */
+	public void onRegister(View v) {
+		// Username
+		String username = usernameText.getText().toString().trim();
+		if (username.length() == 0) {
+			CustomDialog.showDialog(this, this, null, getString(R.string.app_name), getString(R.string.no_username_error_message), false);
+			return;
+		}
+		
+		// Password
+		String password = passwordText.getText().toString().trim();
+		if (password.length() < 8) {
+			CustomDialog.showDialog(this, this, null, getString(R.string.app_name), getString(R.string.length_password_error_message), false);
+			return;
+		}
+		
+		// Email
+		String email = emailText.getText().toString();
+		if (email.length() == 0) {
+			CustomDialog.showDialog(this, this, null, getString(R.string.app_name), getString(R.string.no_email_error_message), false);
+			return;
+		} else if (!Util.isValidEmail(email)) {
+			CustomDialog.showDialog(this, this, null, getString(R.string.app_name), getString(R.string.invalid_format_email_error_message), false);
+			return;
+		}
+		
+		// Do register!
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(password);
+		user.setEmail(email);
+		user.signUpInBackground(new WordSignUpCallback());
+	}
+
+	@Override // CustomDialogListener
+	public void onYesButtonClicked(String dialogId) {
+		if (dialogId == SIGN_UP_DIALOG) finish();
+	}
+
+	@Override
+	public void onNoButtonClicked(String dialogId) {
+	}
+	
+	/**
+	 * The onCancel will be invoked when clicking on the cancel button
+	 * @param v
+	 */
+	public void onCancel(View v) {
+		finish();
+	}
+	
+	// Protected Methods
+	protected void initActivity() {
+		// UIs
+		usernameText = (EditText) findViewById(R.id.username);
+		passwordText = (EditText) findViewById(R.id.password);
+		emailText = (EditText) findViewById(R.id.email);
+	}
+	
+	/**
+	 * The WordSignUpCallback
+	 * @author tchin
+	 *
+	 */
+	private class WordSignUpCallback extends SignUpCallback {
+
+		@Override // SignUpCallback
+		public void done(ParseException e) {
+			if (e == null) {
+				CustomDialog.showDialog(RegisterActivity.this, RegisterActivity.this, SIGN_UP_DIALOG, getString(R.string.app_name), getString(R.string.thank_you_register_message), false);
+			} else { 
+				String msg = getString(R.string.server_technical_error_message);
+				if (e.getCode() == ParseException.EMAIL_TAKEN) msg = getString(R.string.taken_email_error_message);
+				else if (e.getCode() == ParseException.USERNAME_TAKEN) msg = getString(R.string.taken_username_error_message);
+				
+				CustomDialog.showDialog(RegisterActivity.this, RegisterActivity.this, null, getString(R.string.app_name), msg, false);	
+			}		
+		}
+	}
+}

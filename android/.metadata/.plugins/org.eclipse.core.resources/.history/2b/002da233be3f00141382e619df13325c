@@ -1,0 +1,10 @@
+package com.threet.game.module;
+
+public interface WordComposerListener {
+
+//	public void onWordDownloadFinished(boolean localMode, Exception e);
+//	public void onWordSyncDone(Exception e);
+	public void onWordSyncUpdate(boolean localMode, Exception e);
+	public void onWordEraseDone(Exception e);
+	public void onWordWriteDone(Exception e);
+}

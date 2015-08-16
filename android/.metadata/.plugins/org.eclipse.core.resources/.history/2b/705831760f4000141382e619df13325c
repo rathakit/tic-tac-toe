@@ -1,0 +1,12 @@
+package com.threet.game.model;
+
+/**
+ * The SlotOwner enum
+ * @author tchin
+ *
+ */
+public enum SlotOwner {
+	NONE,
+	GAMER,
+	ROBOT
+}

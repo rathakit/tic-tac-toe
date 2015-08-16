@@ -1,0 +1,12 @@
+package com.threet.game.module;
+
+import com.threet.game.model.SlotOwner;
+
+public class Gamer extends Player {
+
+	// TODO Constructor
+	public Gamer(Board board, String name) {
+		super(board, name);
+		setPlayer(SlotOwner.GAMER);
+	}
+}

@@ -1,0 +1,48 @@
+package com.threet.game.view;
+
+import com.threet.game.R;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+
+/**
+ * The PlayerActivity used for the player selection.
+ * @author tchin
+ *
+ */
+public class PlayerActivity extends BaseActivity {
+	
+	public static final String NUM_PLAYER_EXTRA = "num_player";
+	
+	// TODO BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.player);
+	}
+	
+	// TODO Layout's Methods
+	/**
+	 * This method will be invoked when clicking on the one player button.
+	 * @param v
+	 */
+	public void selectOnePlayer(View v) {
+		Intent intent = new Intent(this, BoardActivity.class);
+		intent.putExtra(NUM_PLAYER_EXTRA, 1);
+		startActivity(intent);
+	}
+	
+	/**
+	 * This method will be invoked when clicking on the two player button.
+	 * @param v
+	 */
+	public void selectTwoPlayers(View v) {
+		Intent intent = new Intent(this, BoardActivity.class);
+		intent.putExtra(NUM_PLAYER_EXTRA, 2);
+		startActivity(intent);
+	}
+	
+	// TODO Protected Methods
+	protected void initActivity() {
+	}
+		
+}

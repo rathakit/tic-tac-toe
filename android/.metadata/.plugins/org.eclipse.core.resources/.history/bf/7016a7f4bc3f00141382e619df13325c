@@ -1,0 +1,188 @@
+package com.mobile.now.view;
+
+import java.util.List;
+
+import com.mobile.now.model.Meaning;
+import com.mobile.now.model.Word;
+import com.mobile.now.model.MeaningType;
+import com.mobile.now.R;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+/**
+ * The WordAdapter handles the list of words.
+ * @author tchin
+ *
+ */
+public class WordAdapter extends ArrayAdapter<Word> {
+	
+	// The words
+    private List<Word> words;
+    
+    // The flag indicates whether each item can be edited or not.
+    private boolean searchMode;
+    
+    // Constructor
+    public WordAdapter(Context context, List<Word> items) {
+        super(context, R.layout.word_item, items);
+        words = items; 
+    }
+    
+	@Override // ArrayAdapter
+	public View getView(int position, View convertView, ViewGroup parent) {
+		View v = convertView;
+
+		if (v == null) {
+			v  = LayoutInflater.from(parent.getContext()).inflate(R.layout.word_item, parent, false);
+		}
+		
+		Word word = words.get(position);
+		formWordOnView(v, word);
+		
+		return v;
+	}
+
+	// Public Methods
+    /**
+     * Set as the search mode.
+     * @param searchMode
+     */
+    public void setSearchMode(boolean searchMode) {
+    	this.searchMode = searchMode;
+    }
+    
+	// Private Methods
+	/**
+	 * Display the word given.
+	 * @param Given word
+	 */
+	private void formWordOnView(View v, Word word) {
+		// UI's
+		ImageView speakerView = (ImageView) v.findViewById(R.id.speaker);
+		RelativeLayout wordView= (RelativeLayout) v.findViewById(R.id.word_layout);
+		RelativeLayout adjView = (RelativeLayout) v.findViewById(R.id.adj_layout);
+		RelativeLayout advView = (RelativeLayout) v.findViewById(R.id.adv_layout);
+		RelativeLayout conjView = (RelativeLayout) v.findViewById(R.id.conj_layout);
+		RelativeLayout intView = (RelativeLayout) v.findViewById(R.id.int_layout);
+		RelativeLayout nounView = (RelativeLayout) v.findViewById(R.id.noun_layout);
+		RelativeLayout pronView = (RelativeLayout) v.findViewById(R.id.pron_layout);
+		RelativeLayout prepView = (RelativeLayout) v.findViewById(R.id.prep_layout);
+		RelativeLayout verbView = (RelativeLayout) v.findViewById(R.id.verb_layout);
+		RelativeLayout memoView = (RelativeLayout) v.findViewById(R.id.memo_layout);
+		TextView wordTextView = (TextView) v.findViewById(R.id.word);
+		TextView adjTextView = (TextView) v.findViewById(R.id.adj_meaning);
+		TextView advTextView = (TextView) v.findViewById(R.id.adv_meaning);
+		TextView conjTextView = (TextView) v.findViewById(R.id.conj_meaning);
+		TextView intTextView = (TextView) v.findViewById(R.id.int_meaning);
+		TextView nounTextView = (TextView) v.findViewById(R.id.noun_meaning);
+		TextView pronTextView = (TextView) v.findViewById(R.id.pron_meaning);
+		TextView prepTextView = (TextView) v.findViewById(R.id.prep_meaning);
+		TextView verbTextView = (TextView) v.findViewById(R.id.verb_meaning);
+		TextView memoTextView = (TextView) v.findViewById(R.id.memo_meaning);
+		ImageView checkImg = (ImageView) v.findViewById(R.id.check_ic);
+		ImageView editImg = (ImageView) v.findViewById(R.id.edit_ic);
+
+		// Edit
+		editImg.setTag(word);
+		if (searchMode) {
+			// Check
+			checkImg.setVisibility(View.VISIBLE);
+			checkImg.setTag(word);
+			if (word.isChecked()) {
+				checkImg.setImageResource(R.drawable.checked);
+			} else {
+				checkImg.setImageResource(R.drawable.check);
+			}
+		} else {
+			checkImg.setVisibility(View.GONE);
+		}
+		
+		// Word
+		List<Meaning> meanings = word.getMeanings();
+		int size = meanings.size();
+		wordView.setBackgroundResource(size == 0 ? R.drawable.full_black_bg : R.drawable.top_black_bg);
+		wordTextView.setText(word.getWord());
+		
+		// Voice?
+		speakerView.setVisibility(word.hasRecordFile() ? View.VISIBLE : View.GONE);
+		speakerView.setTag(word);
+		
+		// Meanings - Set the default display.
+		adjView.setVisibility(View.GONE);
+		advView.setVisibility(View.GONE);
+		conjView.setVisibility(View.GONE);
+		intView.setVisibility(View.GONE);
+		nounView.setVisibility(View.GONE);
+		pronView.setVisibility(View.GONE);
+		prepView.setVisibility(View.GONE);
+		verbView.setVisibility(View.GONE);
+		memoView.setVisibility(View.GONE);
+		adjView.setBackgroundResource(R.drawable.middle_black_bg);
+		advView.setBackgroundResource(R.drawable.middle_black_bg);
+		conjView.setBackgroundResource(R.drawable.middle_black_bg);
+		intView.setBackgroundResource(R.drawable.middle_black_bg);
+		nounView.setBackgroundResource(R.drawable.middle_black_bg);
+		pronView.setBackgroundResource(R.drawable.middle_black_bg);
+		prepView.setBackgroundResource(R.drawable.middle_black_bg);
+		verbView.setBackgroundResource(R.drawable.middle_black_bg);
+		memoView.setBackgroundResource(R.drawable.middle_black_bg);
+		for (int i = 0; i < size; i++) {
+			Meaning m = meanings.get(i);
+			MeaningType type = m.getMeaningType();
+			switch (type) {
+				case Adjective: 
+					adjTextView.setText(m.getMeaning()); 
+					adjView.setVisibility(View.VISIBLE);
+					if (i == size - 1) adjView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Adverb:
+					advTextView.setText(m.getMeaning());
+					advView.setVisibility(View.VISIBLE);
+					if (i == size - 1) advView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Conjunction: 
+					conjTextView.setText(m.getMeaning());
+					conjView.setVisibility(View.VISIBLE);
+					if (i == size - 1) conjView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Interjection: 
+					intTextView.setText(m.getMeaning());
+					intView.setVisibility(View.VISIBLE);
+					if (i == size - 1) intView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Noun: 
+					nounTextView.setText(m.getMeaning());
+					nounView.setVisibility(View.VISIBLE);
+					if (i == size - 1) nounView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Pronoun: 
+					pronTextView.setText(m.getMeaning());
+					pronView.setVisibility(View.VISIBLE);
+					if (i == size - 1) pronView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Preposition: 
+					prepTextView.setText(m.getMeaning());
+					prepView.setVisibility(View.VISIBLE);
+					if (i == size - 1) prepView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Verb: 
+					verbTextView.setText(m.getMeaning());
+					verbView.setVisibility(View.VISIBLE);
+					if (i == size - 1) verbView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+				case Memo: 
+					memoTextView.setText(m.getMeaning());
+					memoView.setVisibility(View.VISIBLE);
+					if (i == size - 1) memoView.setBackgroundResource(R.drawable.bottom_black_bg);
+					break;
+			}
+		}
+	}
+}

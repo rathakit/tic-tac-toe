@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Threet</string>
+    <string name="play_again_text">Play Again!</string>
+</resources>

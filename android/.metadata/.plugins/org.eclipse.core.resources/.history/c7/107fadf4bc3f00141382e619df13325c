@@ -1,0 +1,42 @@
+package com.mobile.now;
+
+import com.parse.Parse;
+import com.parse.ParseFacebookUtils;
+import com.parse.ParseObject;
+import com.threet.game.model.Meaning;
+import com.threet.game.model.User;
+import com.threet.game.model.Word;
+
+import android.app.Application;
+import android.content.Context;
+
+public class App extends Application {
+	
+	private static final String APPLICATION_ID = "18BZdAKp5LgPjVs209e394e4NYopmHLC99WQeYgf";
+	private static final String CLIENT_KEY = "GdnLwDhKWVSE19stBcbTBOmmQUo62WTUsIkQlRIF";
+	private static final String FACEBOOK_APP_ID = "853537241332047";
+	private static App instance;
+
+	// Constructor
+	public App() {
+        instance = this;
+    }
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+
+		// Add your initialization code here
+		Parse.enableLocalDatastore(this);
+		ParseObject.registerSubclass(Word.class);
+		ParseObject.registerSubclass(Meaning.class);
+		ParseObject.registerSubclass(User.class);
+		Parse.initialize(this, APPLICATION_ID, CLIENT_KEY);
+		ParseFacebookUtils.initialize(FACEBOOK_APP_ID);
+	}
+	
+	// Public Methods
+    public static Context getContext() {
+        return instance;
+    }
+}

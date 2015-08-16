@@ -1,0 +1,64 @@
+package com.mobile.now.util;
+
+import com.mobile.now.R;
+
+import android.app.Dialog;
+import android.content.Context;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.TextView;
+
+/**
+ * The helper class for dialog.
+ * @author tchin
+ *
+ */
+public class CustomDialog {
+
+	/**
+	 * The 'showDialog' static method populate the dialog.
+	 * @param title
+	 * @param message
+	 * @param twoButtonDisplay
+	 */
+	public static void showDialog(Context context, final CustomDialogListener listener, final String dialogId, String title, String message, boolean twoButtonDisplay) {
+		final Dialog dialog = new Dialog(context, R.style.no_dialog_title);
+		dialog.setContentView(R.layout.dialog);
+		dialog.setCancelable(true);
+		 
+		// Title
+		TextView titleText =(TextView) dialog.findViewById(R.id.title);
+		titleText.setText(title);
+		
+		// Message
+		TextView msgText =(TextView) dialog.findViewById(R.id.message);
+		msgText.setText(message);
+		
+		// Buttons
+		Button okButton = (Button) dialog.findViewById(R.id.yes);
+		okButton.setOnClickListener(new OnClickListener() {
+			
+			@Override // OnClickListener
+			public void onClick(View v) {
+				if (listener != null) listener.onYesButtonClicked(dialogId);
+				dialog.dismiss();
+			}
+		});
+		Button cancelButton = (Button) dialog.findViewById(R.id.no);
+		cancelButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				if (listener != null) listener.onNoButtonClicked(dialogId);
+				dialog.dismiss();
+			}
+		});
+		
+		// 2 Buttons Display?
+		cancelButton.setVisibility(twoButtonDisplay ? View.VISIBLE : View.GONE);;
+		
+		// Display it!
+		dialog.show();
+	}
+}

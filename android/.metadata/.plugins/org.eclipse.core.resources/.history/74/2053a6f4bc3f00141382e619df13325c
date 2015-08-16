@@ -1,0 +1,333 @@
+package com.mobile.now.model;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import android.os.Environment;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import com.mobile.now.util.Util;
+import com.parse.ParseClassName;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
+
+/**
+ * The Word class keeps the word that users are willing to remember.
+ * @author tchin
+ *
+ */
+@ParseClassName("Word")
+public class Word extends ParseObject implements Comparable<Word>, Parcelable {
+	
+	public static final String RECORDED_VOICE_BASE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/now/";
+	public static final String DEFAULT_RECORDED_VOICE_FULL_PATH = RECORDED_VOICE_BASE_PATH  + "pronunciation.3gp";
+	public static final String RECORDED_VOICE_FILE_TAG = "voiceFile";
+	public static final String OWNER_ATTRIBUTE = "owner";
+	public static final String OFFLINE_ATTRIBUTE = "offline";
+	public static final String REMOVED_ATTRIBUTE = "removed";
+	public static final String FILE_NAME_ATTRIBUTE = "fileName";
+	public static final int FILE_NAME_LENGTH = 7;
+
+	// This field is needed for Android to be able to create new objects, individually or as arrays.
+	public static final Parcelable.Creator<Word> CREATOR = new Creator<Word>() {
+		
+		public Word createFromParcel(Parcel in) {
+			return new Word(in);
+		}
+
+		public Word[] newArray(int size) {
+			return new Word[size];
+		}
+	};
+	
+	// The owner
+	private User owner;
+	
+	// The word
+	private String word;
+	
+	// Meanings of word
+	private List<Meaning> meanings;
+	
+	// The file name
+	private String fileName;
+	
+	// The pronunciation file
+	private String voicePath;
+	
+	// The checked status
+	private boolean checked;
+	
+	// Overload Constructor
+	public Word() {
+	}
+	
+	public Word(String word) {
+		setWord(word);
+	}
+	
+	public Word(Parcel in) {
+		word = in.readString();
+		meanings = new ArrayList<Meaning>();
+		in.readTypedList(meanings, Meaning.CREATOR);
+		fileName = in.readString();
+		voicePath = in.readString();
+		checked = in.readInt() == 1;
+	}
+
+	@Override // Comparable<Word>
+	public int compareTo(Word another) {
+		return getWord().compareToIgnoreCase(another.getWord());
+	}
+
+
+	@Override // Parcelable
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(getWord());
+		dest.writeTypedList(getMeanings());
+		dest.writeString(getFileName());
+		dest.writeString(getSoundPath());
+		dest.writeInt(isChecked() ? 1 : 0);
+	}
+	
+	// Public Methods
+	/**
+	 * Save recorded voice file to the server.
+	 * @param file
+	 */
+	public void saveRecordVoiceFile(ParseFile file) {
+		put(RECORDED_VOICE_FILE_TAG, file);
+	}
+	
+	/**
+	 * Get recorded voice file from the server.
+	 * @return file
+	 */
+	public ParseFile getRecordVoiceFile() {
+		return (ParseFile) get(RECORDED_VOICE_FILE_TAG);
+	}
+	
+	/**
+	 * Add a meaning of word.
+	 * @param meaning
+	 */
+	public void addMeaning(Meaning meaning) {
+		meanings = getMeanings();
+		meanings.add(meaning);
+		put("meanings", meanings);
+	}
+	
+	/**
+	 * Set the checked status.
+	 * @param checked
+	 */
+	public void setChecked(boolean checked) {
+		this.checked = checked;
+	}
+	
+	/**
+	 * Indicate the word was checked.
+	 * @return The checked status
+	 */
+	public boolean isChecked() {
+		return checked;
+	}
+	
+	/**
+	 * Get meanings of word.
+	 * @return Group of meanings
+	 */
+	public List<Meaning> getMeanings() {
+		if (meanings == null) {
+			if (has("meanings")) meanings = getList("meanings");
+			else meanings = new ArrayList<Meaning>();
+		}
+		return meanings;
+	}
+	
+	/**
+	 * Check if there any meanings?
+	 * @return the status
+	 */
+	public boolean hasMeaning() {
+		List<Meaning> list = getMeanings();
+		return list != null ? list.size() > 0 : false;
+	}
+	
+	/**
+	 * Remove all meanings.
+	 */
+	public void removeAllMeanings() {
+		meanings = getMeanings();
+		Iterator<Meaning> it = meanings.iterator();
+		while (it.hasNext()) {
+			it.next().deleteEventually();
+		}
+		meanings.clear();
+		put("meanings", meanings);
+	}
+	
+	/**
+	 * Get the saved word.
+	 * @return word
+	 */
+	public String getWord() {
+		if (word == null) {
+			word = getString("word");
+		}
+		return word;
+	}
+	
+	/**
+	 * Set the word.
+	 * @param word
+	 */
+	public void setWord(String word) {
+		this.word = word;
+		put("word", word);
+	}
+	
+	/**
+	 * Get the owner.
+	 * @return owner
+	 */
+	public User getOwner() {
+		if (owner == null) {
+			owner = (User) get(OWNER_ATTRIBUTE);
+		}
+		return owner;
+	}
+	
+	/**
+	 * Set the owner.
+	 * @param owner
+	 */
+	public void setOwner(User owner) {
+		this.owner = owner;
+		put(OWNER_ATTRIBUTE, owner);
+	}
+	
+	/**
+	 * Is this word offline?
+	 * @return the offline
+	 */
+	public boolean isOffline() {
+		return has(OFFLINE_ATTRIBUTE) && getBoolean(OFFLINE_ATTRIBUTE);
+	}
+	
+	/**
+	 * Set the offline word.
+	 * @param offline
+	 */
+	public void markOffline() {
+		put(OFFLINE_ATTRIBUTE, true);
+	}
+	
+	/**
+	 * Remove the offline mode.
+	 */
+	public void removeOffline() {
+		if (has(OFFLINE_ATTRIBUTE)) remove(OFFLINE_ATTRIBUTE);
+	}
+	
+	/**
+	 * Mark the word as removed
+	 */
+	public void markRemoved() {
+		put(REMOVED_ATTRIBUTE, true);
+	}
+	
+	/**
+	 * Is this word removed?
+	 */
+	public boolean isRemoved() {
+		return has(REMOVED_ATTRIBUTE) ? getBoolean(REMOVED_ATTRIBUTE) : false;
+	}
+
+	/**
+	 * Get the pronunciation file path.
+	 * @return path
+	 */
+	public String getSoundPath() {
+		if (voicePath == null) {
+			voicePath = String.format("%s%s.3gp", RECORDED_VOICE_BASE_PATH, getFileName());
+		}
+		return voicePath;
+	}
+	
+	/**
+	 * Set the sound path.
+	 * @param voicePath
+	 */
+	public void setSoundPath(String voicePath) {
+		this.voicePath = voicePath;
+	}
+	
+	/**
+	 * Check pronunciation recorded
+	 * @return flag - indicate recorded status
+	 */
+	public boolean hasRecordFile() {
+		String path = getSoundPath();
+		if (path != null && path.trim().length() > 0) {
+			File file = new File(path);
+			return file.exists();
+		}
+		return false;
+	}
+
+	/**
+	 * Check the keyword whether matching the word.
+	 * @param searchText
+	 * @return The result
+	 */
+	public boolean matched(String searchText) {
+		if (searchText == null) return true;
+		
+		boolean matched = false;
+		String w = getWord();
+		if (w != null) {
+			matched = w.toLowerCase().contains(searchText.trim().toLowerCase());
+		}
+		return matched;
+	}
+
+	/**
+	 * Get the file name.
+	 * @return the name of file
+	 */
+	public String getFileName() {
+		if (fileName == null) {
+			if (has(FILE_NAME_ATTRIBUTE)) {
+				fileName = getString(FILE_NAME_ATTRIBUTE);
+			} else {
+				fileName = generateFileName();
+				put(FILE_NAME_ATTRIBUTE, fileName);
+			}
+		}
+		return fileName;
+	}
+	
+	// TODO Private Methods
+	/**
+	 * Generate the name of file.
+	 */
+	private String generateFileName() {
+		File file = null;
+		String name = null;
+		do {
+			name = Util.randomString(FILE_NAME_LENGTH);
+			String path = String.format("%s%s.3gp", RECORDED_VOICE_BASE_PATH, name);
+			file = new File(path);
+		} while (file.exists());
+		return name;
+	}
+}

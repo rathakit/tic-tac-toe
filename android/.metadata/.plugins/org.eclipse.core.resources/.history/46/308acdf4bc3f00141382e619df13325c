@@ -1,0 +1,90 @@
+package com.mobile.now.view;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
+import com.parse.ParseUser;
+import com.threet.game.R;
+import com.threet.game.util.CustomDialog;
+import com.threet.game.util.CustomDialogListener;
+import com.threet.game.util.Util;
+
+/**
+ * The SettingsActivity is the settings view.
+ * @author tchin
+ *
+ */
+public class SettingsActivity extends BaseActivity implements CustomDialogListener {
+	
+	// BaseActivity
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState, R.layout.settings);
+	}
+	
+	// Layout's Methods
+	/**
+	 * The onLogout will be invoked when clicking on the login button.
+	 * @param v
+	 */
+	public void onLogout(View v) {
+		// Show confirmation dialog.
+		CustomDialog.showDialog(this, this, null, getString(R.string.app_name), getString(R.string.logout_confirmation_question), true);
+	}
+	
+	/**
+	 * The onRate will be invoked when clicking on the rate button.
+	 * @param v
+	 */
+	public void onRate(View v) {
+		String appPackageName = getPackageName();
+		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName));
+		startActivity(intent);
+	}
+	
+	/**
+	 * The onChangePassword will be invoked when clicking on the changing password button.
+	 * @param v
+	 */
+	public void onChangePassword(View v) {
+		Intent intent = new Intent(this, ChangePasswordActivity.class);
+		startActivity(intent);
+	}
+	
+	/**
+	 * The onBackClicked will be invoked when clicking on the back button.
+	 * @param v
+	 */
+	public void onBackClicked(View v) {
+		finish();
+	}
+	
+	@Override // CustomDialogListener
+	public void onYesButtonClicked(String dialogId) {
+		doLogout();
+	}
+
+	@Override
+	public void onNoButtonClicked(String dialogId) {
+	}
+	
+	// Protected Methods
+	protected void initActivity() {
+		TextView version = (TextView) findViewById(R.id.version);
+		version.setText(Util.getAppVersion());
+	}
+	
+	// Private Methods
+	/**
+	 * Logout and back to home again.
+	 */
+	private void doLogout() {
+		ParseUser.logOut();
+		
+		// Send the result back to main view!
+		setResult(RESULT_OK);
+		finish();
+	}
+}

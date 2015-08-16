@@ -1,0 +1,11 @@
+package com.threet.game.view;
+
+public interface TitleViewListener {
+
+	public void onSettingsClicked();
+	public void onSearchClicked(String text);
+	public void onSearchCancel();
+	public void onSearching(String text);
+	public void onQuizClicked();
+	public void onSortClicked(boolean ascending);
+}

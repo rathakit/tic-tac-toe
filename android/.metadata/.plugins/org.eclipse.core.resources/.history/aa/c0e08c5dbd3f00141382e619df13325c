@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:background="@drawable/bg2"
+	android:orientation="vertical">
+	
+	<ScrollView android:layout_width="fill_parent"
+	    android:layout_height="0dp"
+	    android:layout_weight="1">
+	
+		<LinearLayout android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:orientation="vertical" >
+		
+		    <!-- Word -->
+		    <EditText android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:id="@+id/word"
+		        android:hint="@string/word_hint_text"
+		        android:textColorHint="@color/grey"
+		        android:padding="20dp"
+		        android:layout_marginTop="20dp"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:textColor="@color/black"
+		        android:textSize="32sp"
+		        android:singleLine="true"
+		        android:nextFocusDown="@+id/verb_meaning"
+		        android:background="@drawable/full_item_bg"/>
+		    
+		    <!-- Verb -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginTop="20dp"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/top_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/verb_abbreviation" />
+		        <ImageView android:id="@+id/verb_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/verb_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/verb_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:nextFocusDown="@+id/noun_meaning"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/verb_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+			</RelativeLayout>
+			
+		    <!-- Noun -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/middle_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/noun_abbreviation" />
+		        <ImageView android:id="@+id/noun_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/noun_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/noun_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:nextFocusDown="@+id/adj_meaning"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/noun_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </RelativeLayout>
+		    
+		    <!-- Adjective -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/middle_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/adjective_abbreviation" />
+		        <ImageView android:id="@+id/adj_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/adj_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/adj_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:nextFocusDown="@+id/adv_meaning"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/adj_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </RelativeLayout>
+		    
+		    <!-- Adverb -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/middle_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/adverb_abbreviation" />
+		        <ImageView android:id="@+id/adv_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/adv_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/adv_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:nextFocusDown="@+id/pron_meaning"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/adv_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </RelativeLayout>
+		    
+		    <!-- Pronoun -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/middle_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/pronoun_abbreviation" />
+		        <ImageView android:id="@+id/pron_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/pron_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/pron_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:nextFocusDown="@+id/prep_meaning"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/pron_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </RelativeLayout>
+		    
+		    <!-- Preposition -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/middle_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/preposition_abbreviation" />
+		        <ImageView android:id="@+id/prep_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/prep_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/prep_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:nextFocusDown="@+id/conj_meaning"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/prep_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </RelativeLayout>
+		    
+		    <!-- Conjunction -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/middle_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/conjunction_abbreviation" />
+		        <ImageView android:id="@+id/conj_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/conj_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/conj_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:nextFocusDown="@+id/int_meaning"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/conj_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </RelativeLayout>
+		
+		    <!-- Interjection -->
+		    <RelativeLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:background="@drawable/middle_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:padding="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:text="@string/interjection_abbreviation" />
+		        <ImageView android:id="@+id/int_arrow" 
+		            android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:src="@drawable/arrow_right"
+		        	android:scaleType="fitXY"
+		        	android:layout_centerVertical="true"
+		        	android:layout_marginLeft="90dp"/>
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content"
+			        android:layout_toRightOf="@id/int_arrow">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/int_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/int_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </RelativeLayout>
+		    
+		    <!-- Note -->
+		    <LinearLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginLeft="20dp"
+		        android:layout_marginRight="20dp"
+		        android:orientation="vertical"
+		        android:background="@drawable/bottom_item_bg">
+		        <TextView android:layout_width="wrap_content"
+		        	android:layout_height="wrap_content"
+		        	android:textColor="@color/black"
+		        	android:textSize="32sp"
+		        	android:textStyle="bold"
+		        	android:paddingTop="20dp"
+		        	android:paddingLeft="20dp"
+		        	android:text="@string/memo_text" />
+		        <RelativeLayout android:layout_width="fill_parent"
+			        android:layout_height="wrap_content">
+			        <EditText android:layout_width="fill_parent"
+				        android:layout_height="wrap_content"
+				        android:id="@+id/note_meaning"
+				        android:padding="20dp"
+				        android:textColorHint="@color/grey"
+				        android:textColor="@color/black"
+				        android:background="@android:color/transparent"
+				        android:singleLine="true"
+				        android:textSize="32sp"/>
+			        <View android:layout_width="fill_parent"
+				        android:layout_height="2dp"
+				        android:layout_below="@id/note_meaning"
+				        android:layout_marginTop="-20dp"
+				        android:layout_marginRight="20dp"
+				        android:layout_marginLeft="20dp"
+				        android:background="@color/grey_transparent"/>
+		        </RelativeLayout>
+		    </LinearLayout>
+		    
+		    <!-- Record -->
+		    <LinearLayout android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:orientation="horizontal"
+		        android:layout_marginTop="20dp"
+		        android:layout_marginBottom="20dp"
+		        android:weightSum="2">
+			    <ImageView android:layout_width="fill_parent"
+		        	android:layout_height="80dp"
+		        	android:src="@drawable/mic"
+		        	android:id="@+id/record_button"
+		        	android:layout_gravity="center"
+		        	android:layout_marginLeft="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:padding="20dp"
+		        	android:layout_weight="1"
+		        	android:onClick="onRecord"
+		        	android:background="@drawable/radius_button_selection"/>
+			    <ImageView android:layout_width="fill_parent"
+		        	android:layout_height="80dp"
+		        	android:src="@drawable/play"
+		        	android:visibility="gone"
+		        	android:layout_gravity="center"
+		        	android:layout_marginLeft="20dp"
+		        	android:layout_marginRight="20dp"
+		        	android:id="@+id/play_button"
+		        	android:padding="20dp"
+		        	android:onClick="onPlay"
+		        	android:layout_weight="1"
+		        	android:background="@drawable/radius_button_selection"/>
+		    </LinearLayout>
+		</LinearLayout>
+	</ScrollView>
+	    
+	<!-- Buttons -->
+	<LinearLayout android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        android:weightSum="2">
+	    <TextView android:layout_width="fill_parent"
+       	    android:layout_height="100dp"
+       	    android:layout_weight="1"
+        	android:id="@+id/cancel_button"
+        	android:gravity="center"
+        	android:textStyle="bold"
+        	android:textSize="32sp"
+        	android:clickable="true"
+        	android:focusable="true"
+        	android:text="@string/cancel_text"
+        	android:textColor="@color/black" 
+        	android:background="@drawable/button_selection"
+        	android:onClick="onCancel"/>
+	    <TextView android:layout_width="fill_parent"
+       	    android:layout_height="100dp"
+        	android:id="@+id/save_button"
+        	android:gravity="center"
+        	android:textSize="32sp"
+        	android:text="@string/save_text"
+        	android:textColor="@color/black"
+        	android:layout_weight="1" 
+        	android:textStyle="bold"
+        	android:clickable="true"
+        	android:focusable="true"
+        	android:background="@drawable/button_selection"
+        	android:onClick="onSave"/>
+    </LinearLayout>
+</LinearLayout>

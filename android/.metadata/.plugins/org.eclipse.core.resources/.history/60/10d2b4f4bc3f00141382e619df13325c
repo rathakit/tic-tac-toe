@@ -1,0 +1,111 @@
+package com.mobile.now.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.parse.ParseObject;
+import com.parse.ParseUser;
+
+/**
+ * The user class
+ * @author tchin
+ *
+ */
+public class User extends ParseUser {
+	
+	public static final String ASCENDING_ATTRIBUTE = "ascendingSort";
+
+	// The words
+	private List<Word> words = new ArrayList<Word>();
+	
+	// The total words for this user
+	private int totalWords;
+	
+	// TODO Public Methods
+	/**
+	 * Set the sorting
+	 */
+	public void setAscendingSort(boolean ascending) {
+		put(ASCENDING_ATTRIBUTE, ascending);
+		saveEventually();
+	}
+	
+	/**
+	 * Does user select the ascending sort?
+	 */
+	public boolean isAscendingSort() {
+		return has(ASCENDING_ATTRIBUTE) ? getBoolean(ASCENDING_ATTRIBUTE) : false;
+	}
+	
+	/**
+	 * Set the total words.
+	 * @param totalWords
+	 */
+	public void setTotalWords(int totalWords) {
+		this.totalWords = totalWords;
+	}
+	
+	/**
+	 * Get the total words.
+	 * @return the total
+	 */
+	public int getTotalWords() {
+		return totalWords;
+	}
+
+	/**
+	 * Count the number of available words.
+	 * @return the available
+	 */
+	public int countAvailableWords() {
+		return words.size();
+	}
+
+	/**
+	 * Add a groups of words
+	 * @param words
+	 */
+	public void addWords(List<Word> objects) {
+		words.addAll(objects);
+	}
+	
+	/**
+	 * Remove the words.
+	 * @param refWords
+	 */
+	public void removeWords(List<ParseObject> refWords) {
+		words.removeAll(refWords);
+	}
+	
+	/**
+	 * Remove the word.
+	 * @param refWord
+	 */
+	public void removeWord(Word refWord) {
+		words.remove(refWord);
+	}
+	
+	/**
+	 * Get all words.
+	 * @return the words.
+	 */
+	public List<Word> getWords() {
+		return words;
+	}
+	
+	/**
+	 * Reset all.
+	 */
+	public void reset() {
+		setTotalWords(0);
+		words.clear();
+	}
+	
+	/**
+	 * Check whether the words is ready.
+	 * @return the ready status
+	 */
+	public boolean isWordReady() {
+		return countAvailableWords() == totalWords;
+	}
+}
